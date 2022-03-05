@@ -13,11 +13,12 @@ in vec3 normal;
 in vec4 skinIndex, skinWeight; // 仅使用了绑定的第一个骨骼
 in vec3 mcol0, mcol1, mcol2, mcol3;
 in float speed;
-in vec4 type; // 贴图和动画的类型
+in float animationIndex; // 动画类型
+in float textureIndex;
 
 out vec2 outUV;
 out vec3 outNormal;
-out float textureIndex;
+out float outTextureIndex;
 // out vec3 lightDirection;
 
 vec3 getAnimationItem(float index) {
@@ -33,7 +34,6 @@ vec3 getAnimationItem(float index) {
 mat4 computeAnimationMatrix() {
 
     float boneIndex = skinIndex[0];
-    float animationIndex = type[3];
     float frameIndex = float(int(time * speed) % int(animationFrameCount));
     float startPos = 4. * (boneCount * (animationIndex * animationFrameCount + frameIndex) + boneIndex);
     mat4 m =  mat4(
@@ -50,7 +50,7 @@ void main() {
 
     outUV = inUV;
     outNormal = normal;
-    textureIndex = type[0];
+    outTextureIndex = textureIndex;
 
     // lightDirection = normalize(cameraPosition - mcol3);
 

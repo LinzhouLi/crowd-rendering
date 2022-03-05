@@ -68,7 +68,7 @@ function Main(){
     }
     this.animate=function()
     {
-        // if(scope.avatarManager) scope.avatarManager.updateLOD();
+        if( scope.avatarManager && scope.avatarManager.created ) scope.avatarManager.updateLOD();
         if(scope.VR)scope.effect.render(scope.scene, scope.camera);
         else scope.renderer.render(scope.scene,scope.camera);
         //scope.divInfo.textContent='场景中三角面个数:' + renderer.info.render.triangles;

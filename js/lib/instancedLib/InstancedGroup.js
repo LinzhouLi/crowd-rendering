@@ -28,10 +28,8 @@ class InstancedGroup {
         this.mcol3;
 
         this.speed; // 动画速度
-        this.type; // type[0]: 头部贴图类型  type[1]: 上身贴图类型  type[3]: 动画类型
-        // this.color; // 人物颜色
-        // this.boneWidth;
-        // this.faceShape;
+        this.animationType;
+        this.textureType;
 
         // shader
         this.vertURL = "shader/vertexBone.vert";
@@ -48,21 +46,12 @@ class InstancedGroup {
         this.mcol1 = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
         this.mcol2 = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
         this.mcol3 = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
-        this.type = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
-        // this.color = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
-        // this.boneWidth = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 4), 4);
-        // this.faceShape = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
         this.speed = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
+        this.animationType = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
+        this.textureType = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
 
         for (let i = 0; i < this.instanceCount; i++) {
-            this.mcol0.setXYZ(i, 1, 0, 0);
-            this.mcol1.setXYZ(i, 0, 1, 0);
-            this.mcol2.setXYZ(i, 0, 0, 1);
-            this.mcol3.setXYZ(i, 0, 0, 0);
-            this.type.setXYZW(i, 0, 0, 0, 0);
-            // this.boneWidth.setXYZW(i, 0.25, 1, 0, 0.25);
-            // this.faceShape.setX(i , 3.5);
-            this.speed.setX(i , 1);
+            this.reset(i);
         }
 
         const material = await this.initMaterial();
@@ -106,7 +95,7 @@ class InstancedGroup {
             animationTexture: { value: this.array2Texture(animationData) }, // 将动画数据保存为图片Texture格式
             animationTextureLength: { value: animationTextureLength }
         };
-        console.log(uniforms)
+        
         let scope = this;
         updateAnimation();
 
@@ -139,10 +128,8 @@ class InstancedGroup {
         geometry.setAttribute('mcol3', this.mcol3);
 
         geometry.setAttribute('speed', this.speed);
-        geometry.setAttribute('type', this.type);
-        // geometry.setAttribute('color', this.color);
-        // geometry.setAttribute('boneWidth', this.boneWidth);
-        // geometry.setAttribute('faceShape', this.faceShape);
+        geometry.setAttribute('animationIndex', this.animationType);
+        geometry.setAttribute('textureIndex', this.textureType);
 
         return geometry;
 
@@ -231,7 +218,32 @@ class InstancedGroup {
 
     }
 
+    reset(avatarIndex) {
+
+        this.mcol0.needsUpdate = true;
+        this.mcol1.needsUpdate = true;
+        this.mcol2.needsUpdate = true;
+        this.mcol3.needsUpdate = true;
+        this.animationType.needsUpdate = true;
+        this.textureType.needsUpdate = true;
+        this.speed.needsUpdate = true;
+
+        this.mcol0.setXYZ(avatarIndex, 1, 0, 0);
+        this.mcol1.setXYZ(avatarIndex, 0, 1, 0);
+        this.mcol2.setXYZ(avatarIndex, 0, 0, 1);
+        this.mcol3.setXYZ(avatarIndex, 0, 0, 0);
+        this.speed.setX(avatarIndex, 1);
+        this.animationType.setX(avatarIndex, 0);
+        this.textureType.setX(avatarIndex, 0);
+
+    }
+
     setMatrix(avatarIndex, matrix) {
+
+        this.mcol0.needsUpdate = true;
+        this.mcol1.needsUpdate = true;
+        this.mcol2.needsUpdate = true;
+        this.mcol3.needsUpdate = true;
 
         this.mcol0.array[3 * avatarIndex] = matrix.elements[0];
         this.mcol0.array[3 * avatarIndex + 1] = matrix.elements[1];
@@ -262,9 +274,6 @@ class InstancedGroup {
 
     setRotation(avatarIndex, rot) {
         
-        this.mcol0.needsUpdate = true;
-        this.mcol1.needsUpdate = true;
-        this.mcol2.needsUpdate = true;
         let mat4 = this.getMatrix(avatarIndex);
         let position = new THREE.Vector3();
         let quaternion = new THREE.Quaternion();
@@ -299,64 +308,23 @@ class InstancedGroup {
         
     }
 
-    setType(avatarIndex, type) { //设置贴图和动画类型
-
-        this.type.array[4 * avatarIndex] = type[0]; // type[0]
-        this.type.array[4 * avatarIndex + 1] = type[1]; // type[1]
-        this.type.array[4 * avatarIndex + 2] = type[2]; // type[2]
-        this.type.array[4 * avatarIndex + 3] = type[3]; // type[3]
-
-    }
-
     setTexture(avatarIndex, type) { //设置贴图类型
 
-        this.type.array[4 * avatarIndex] = type; // type[0]
-        this.type.array[4 * avatarIndex + 1] = type; // type[1]
-        this.type.array[4 * avatarIndex + 2] = type; // type[2]
+        this.textureType.needsUpdate = true;
+        this.textureType.array[avatarIndex] = type;
 
     }
 
-    setHeadTexture(avatarIndex, type) { //设置头部贴图类型(无法使用)
+    setAnimation(avatarIndex, type) { // 设置动画类型
 
-        this.type.array[4 * avatarIndex] = type; // type[0]
-
-    }
-
-    setBodyTexture(avatarIndex, type) { //设置上身贴图类型(无法使用)
-
-        this.type.array[4 * avatarIndex + 1] = type; // type[1]
-
-    }
-
-    setAnimation(avatarIndex, animationType) { // 设置动画类型
-
-        this.type.array[4 * avatarIndex + 3] = animationType; // type[3]
-
-    }
-
-    setColor(avatarIndex, color) {
-
-        this.color.array[3 * avatarIndex] = color[0];
-        this.color.array[3 * avatarIndex + 1] = color[1];
-        this.color.array[3 * avatarIndex + 2] = color[2];
-
-    }
-
-    setBoneWidth(avatarIndex, regionIndex, width) {
-
-        this.boneWidth.array[4 * avatarIndex + regionIndex] = width;
-
-    }
-
-    setFaceShape(avatarIndex, width) {
-
-        this.faceShape.needsUpdate = true;
-        this.faceShape.array[avatarIndex] = width;
+        this.animationType.needsUpdate = true;
+        this.animationType.array[avatarIndex + 3] = type;
 
     }
 
     setSpeed(avatarIndex, speed) { // 设置动画速度
 
+        this.speed.needsUpdate = true;
         this.speed.array[avatarIndex] = speed;
 
     }
