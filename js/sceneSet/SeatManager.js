@@ -4,7 +4,7 @@ class SeatManager {
         this.positions = []; // 1677
         this.chairs = new THREE.Object3D();
         //this.chairs.visible=false;
-        this.url = "myModel/chair.glb";
+        this.url = "assets/model/chair.glb";
         this.myNetwork = new Network();
         //一楼前部分
         var k, i, j;

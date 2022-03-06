@@ -21,7 +21,7 @@ VideoManager.prototype = {
         function getVideo() {
             var oPanel = document.createElement('video');
             oPanel.style.cssText = 'loop;';
-            oPanel.src = "video.mp4";
+            oPanel.src = "assets/video.mp4";
             return oPanel;
         }
         function getVideoTexture(video) {

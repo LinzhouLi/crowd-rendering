@@ -13,14 +13,18 @@ class AvatarManager {
 
         this.manager = {
             params: [],
-            LODParams: { // 3级LOD
+            config: { // 3级LOD
                 male: {
-                    maxCount: [ 200, 2000, 7000 ],
-                    availableIndices: [ ]
+                    maxCount: [ 90, 600, 4000 ],
+                    availableIndices: [ ],
+                    textureCount: 32,
+                    animationCount: 3,
                 },
                 female: {
-                    maxCount: [ 200, 2000, 7000 ],
-                    availableIndices: [ ]
+                    maxCount: [ 90, 600, 4000 ],
+                    availableIndices: [ ],
+                    textureCount: 16,
+                    animationCount: 3,
                 }
             },
             instanceGroup: {
@@ -30,8 +34,8 @@ class AvatarManager {
         };
 
         for (let i = 0; i < 3; i++) {
-            this.manager.LODParams.male.availableIndices.push( range( this.manager.LODParams.male.maxCount[i] ) );
-            this.manager.LODParams.female.availableIndices.push( range( this.manager.LODParams.female.maxCount[i] ) );
+            this.manager.config.male.availableIndices.push( range( this.manager.config.male.maxCount[i] ) );
+            this.manager.config.female.availableIndices.push( range( this.manager.config.female.maxCount[i] ) );
         }
         console.log(this.manager)
         function range( count ) {
@@ -40,10 +44,13 @@ class AvatarManager {
 
     }
 
-    init() {
+    async init() {
 
         this.createHost();
-        this.createAvatar();
+        this.initAvatarParams();
+        await this.createMaleAvatar();
+        await this.createFemaleAvatar();
+        this.created = true;
 
     }
 
@@ -54,39 +61,45 @@ class AvatarManager {
             if (lod[i] != this.manager.params[i].LOD) {
                 
                 let param = this.manager.params[i];
-
                 this.unsetInstanceParam( param );
-
                 param.LOD = lod[i];
-                param.index = this.manager.LODParams[param.sex].availableIndices[param.LOD].pop();
-                if(param.index==undefined)console.log(param.LOD,param.index)
                 this.setInstanceParam( param );
 
             }
+            this.manager.instanceGroup.male.forEach( v => v.update() );
+            this.manager.instanceGroup.female.forEach( v => v.update() );
         }
 
     }
 
     unsetInstanceParam( param ) {
 
-        if ( param.index != -1 ) {
-            if ( param.LOD == 0) {
-            const instanceGroup = this.manager.instanceGroup[param.sex][param.LOD];
-            instanceGroup.reset( param.index );
-            }
-            this.manager.LODParams[param.sex].availableIndices[param.LOD].push( param.index );
-        }
+        if ( param.index == -1 || param.LOD == -1 ) return; // LOD为-1表示在视锥外
 
+        const instanceGroup = this.manager.instanceGroup[param.sex][param.LOD];
+        instanceGroup.reset( param.index );
+
+        // 释放此index
+        this.manager.config[param.sex].availableIndices[param.LOD].push( param.index );
+        
     }
 
     setInstanceParam( param ) {
 
-        if (param.LOD != 0) return;
+        if ( param.LOD == -1 ) return; // LOD为-1表示在视锥外
+
+        // 占有一个可用index
+        param.index = this.manager.config[param.sex].availableIndices[param.LOD].pop();
+        if(param.index==undefined)console.log(param.LOD,param.index) // instances个数不足
+        // 人物旋转参数设置
+        let rotation = [Math.PI / 2, Math.PI / 2, 3 * Math.PI / 2];
+        if ( param.LOD == 2 ) rotation = [Math.PI / 2, 0, 3 * Math.PI / 2];
+
         const instanceGroup = this.manager.instanceGroup[param.sex][param.LOD];
         instanceGroup.setAnimation( param.index, param.animationType );
         instanceGroup.setSpeed( param.index, param.animationSpeed );
         instanceGroup.setTexture( param.index, param.textureType );
-        instanceGroup.setRotation( param.index, [Math.PI / 2, Math.PI / 2, 3 * Math.PI / 2] ) // 使Avatar面向前方
+        instanceGroup.setRotation( param.index, rotation ) // 使Avatar面向前方
         instanceGroup.setPosition( param.index, param.position );
         instanceGroup.setScale( param.index, param.scale );
 
@@ -96,47 +109,58 @@ class AvatarManager {
 
     }
 
-    async createAvatar() {
+    initAvatarParams() {
 
-        // 导入动画数据
-        const animationData = await this.loadJSON( "json/animations.json" );
-        const animationCount = animationData.config.length;
-
-        // 男性模型贴图资源设置
-        const maleModelPath = "myModel/merged.glb";
-        const maleTexturePath = "./img/texture/m/m2.jpg";
-        const maleTextureCount = 32;
-
-        // 女性性模型贴图资源设置
-        const femaleModelPath = "myModel/merged.glb";
-        const femaleTexturePath = "./img/texture/w/w2.jpg";
-        const femaleTexureCount = 16;
-
-        // 人群随机参数化
         const positionBias = [ 1.6, 1.2, 0 ]; // 微调人物位置
         for (let i = 0; i < this.seatPositions.length; i++) {
             let param = {
                 position: vecAdd( this.seatPositions[i], positionBias ),
                 scale: [ 2.6, 2.6, 2.6 ],
-                animationType: Math.floor( Math.random() * animationCount ),
-                animationSpeed: 0.2 + Math.random() * 0.1,
+                animationSpeed: 0.4 + Math.random() * 0.2,
                 LOD: -1,
                 index: -1
             }
-            if (Math.random() < 1.1) { // 以0.6的概率生成男性
-                param.textureType = Math.floor( Math.random() * maleTextureCount );
+            if (Math.random() < 0.5) { // 以0.5的概率生成男性
+                param.textureType = Math.floor( Math.random() * this.manager.config.male.textureCount );
+                param.animationType = Math.floor( Math.random() * this.manager.config.male.animationCount );
                 param.sex = "male";
             }
             else { // 以0.4的概率生成女性
-                param.textureType = Math.floor( Math.random() * femaleTexureCount );
+                param.textureType = Math.floor( Math.random() * this.manager.config.female.textureCount );
+                param.animationType = Math.floor( Math.random() * this.manager.config.female.animationCount );
                 param.sex = "female";
             }
             this.manager.params.push( param );
         }
 
+        function vecAdd( a, b ) {
+            return [ a[0] + b[0], a[1] + b[1], a[2] + b[2] ];
+        }
+
+    }
+
+    async createAvatar() {
+
+        // 人群随机参数化
+        this.initAvatarParams();
+
+        // 导入动画数据
+        const animationData = await this.loadJSON( "assets/animation/male_high_animations.json" );
+        const animationCount = animationData.config.length;
+
+        // 男性模型贴图资源设置
+        const maleModelPath = "assets/model/avatar/male_high.glb";
+        const maleTexturePath = "assets/texture/m2.jpg";
+        const maleTextureCount = 32;
+
+        // 女性性模型贴图资源设置
+        const femaleModelPath = "assets/model/avater/female_high.glb";
+        const femaleTexturePath = "assets/texture/w2.jpg";
+        const femaleTexureCount = 16;
+
         // 生成实例化对象
         const maleInstanceGroupL0 = await this.createInstancedGroup( 
-            this.manager.LODParams.male.maxCount[0], 
+            this.manager.config.male.maxCount[0], 
             maleModelPath, 
             animationData, 
             maleTexturePath, 
@@ -159,35 +183,133 @@ class AvatarManager {
 
     }
 
-    async createInstancedGroup( count, modelPath, animations, texturePath, textureCount ) {
+    async createMaleAvatar() {
 
-        // 导入GLB模型
-        const gltf = await this.loadGLB( modelPath );
-        let skinnedMesh;
-        gltf.scene.traverse( node => { 
-            if (node instanceof THREE.SkinnedMesh) 
-                skinnedMesh = node; 
-        } );
+        // 资源路径设置
+        const highModelPath = "assets/model/avatar/male_high.glb";
+        const highAnimationPath = "assets/animation/male_high_animations.json";
+        const highTexturePath = "assets/texture/m2.jpg";
 
-        // 生成实例化对象
-        const instanceGroup = new InstancedGroup(
-            count,
-            skinnedMesh,
-            animations,
-            texturePath,
-            textureCount,
+        const mediumModelPath = "assets/model/avatar/male_medium.glb";
+        const mediumAnimationPath = "assets/animation/male_medium_animations.json";
+        const mediumTexturePath = "assets/texture/m1.jpg";
+
+        const lowModelPath = "assets/model/avatar/male_low.glb";
+        const lowTexturePath = "assets/texture/m0.jpg";
+
+        // load
+        const highModel = await this.loadGLB( highModelPath );
+        const mediumModel = await this.loadGLB( mediumModelPath );
+        const lowModel = await this.loadGLB( lowModelPath );
+
+        const highMesh = highModel.scene.children[0].children[1];
+        const mediumMesh = mediumModel.scene.children[0].children[1];
+        const lowMesh = lowModel.scene.children[0];
+
+        // InstanceGroup
+        // high
+        const highInstanceGroup = new InstancedGroup(
+            this.manager.config.male.maxCount[0],
+            highMesh,
+            highAnimationPath,
+            highTexturePath,
+            this.manager.config.male.textureCount,
             this.camera
         );
+        this.manager.instanceGroup.male.push( highInstanceGroup );
+        const highInstanceMesh = await highInstanceGroup.init();
+        this.obj.add( highInstanceMesh );
 
-        // 设置人群随机化参数
-        const mesh = await instanceGroup.init();
-        // for (let i = 0; i < count; i++) {
-        //     instanceGroup.setRotation( i, [Math.PI / 2, Math.PI / 2, 3 * Math.PI / 2] ) // 使Avatar面向前方
-        //     instanceGroup.setScale( i, [0.1,0.1,0.1] );
-        // }
-        this.obj.add( mesh );
+        // medium
+        const mediumInstanceGroup = new InstancedGroup(
+            this.manager.config.male.maxCount[1],
+            mediumMesh,
+            mediumAnimationPath,
+            mediumTexturePath,
+            this.manager.config.male.textureCount,
+            this.camera
+        );
+        this.manager.instanceGroup.male.push( mediumInstanceGroup );
+        const mediumInstanceMesh = await mediumInstanceGroup.init();
+        this.obj.add( mediumInstanceMesh );
 
-        return instanceGroup;
+        // low
+        const lowInstanceGroup = new InstancedGroup(
+            this.manager.config.male.maxCount[2],
+            lowMesh,
+            false,
+            lowTexturePath,
+            this.manager.config.male.textureCount,
+            this.camera
+        );
+        this.manager.instanceGroup.male.push( lowInstanceGroup );
+        const lowInstanceMesh = await lowInstanceGroup.init();
+        this.obj.add( lowInstanceMesh );
+
+    }
+
+    async createFemaleAvatar() {
+
+        // 资源路径设置
+        const highModelPath = "assets/model/avatar/female_high.glb";
+        const highAnimationPath = "assets/animation/female_high_animations.json";
+        const highTexturePath = "assets/texture/w2.jpg";
+
+        const mediumModelPath = "assets/model/avatar/female_medium.glb";
+        const mediumAnimationPath = "assets/animation/female_medium_animations.json";
+        const mediumTexturePath = "assets/texture/w1.jpg";
+
+        const lowModelPath = "assets/model/avatar/female_low.glb";
+        const lowTexturePath = "assets/texture/w0.jpg";
+
+        // load
+        const highModel = await this.loadGLB( highModelPath );
+        const mediumModel = await this.loadGLB( mediumModelPath );
+        const lowModel = await this.loadGLB( lowModelPath );
+
+        const highMesh = highModel.scene.children[0].children[1].children[0];
+        const mediumMesh = mediumModel.scene.children[0].children[1].children[0];
+        const lowMesh = lowModel.scene.children[0];
+
+        // InstanceGroup
+        // high
+        const highInstanceGroup = new InstancedGroup(
+            this.manager.config.female.maxCount[0],
+            highMesh,
+            highAnimationPath,
+            highTexturePath,
+            this.manager.config.female.textureCount,
+            this.camera
+        );
+        this.manager.instanceGroup.female.push( highInstanceGroup );
+        const highInstanceMesh = await highInstanceGroup.init();
+        this.obj.add( highInstanceMesh );
+
+        // medium
+        const mediumInstanceGroup = new InstancedGroup(
+            this.manager.config.female.maxCount[1],
+            mediumMesh,
+            mediumAnimationPath,
+            mediumTexturePath,
+            this.manager.config.female.textureCount,
+            this.camera
+        );
+        this.manager.instanceGroup.female.push( mediumInstanceGroup );
+        const mediumInstanceMesh = await mediumInstanceGroup.init();
+        this.obj.add( mediumInstanceMesh );
+
+        // low
+        const lowInstanceGroup = new InstancedGroup(
+            this.manager.config.female.maxCount[2],
+            lowMesh,
+            false,
+            lowTexturePath,
+            this.manager.config.female.textureCount,
+            this.camera
+        );
+        this.manager.instanceGroup.female.push( lowInstanceGroup );
+        const lowInstanceMesh = await lowInstanceGroup.init();
+        this.obj.add( lowInstanceMesh );
 
     }
 

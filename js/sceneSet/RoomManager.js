@@ -21,7 +21,7 @@ class RoomManager{
         scope.myNetwork = new Network();
         scope.myVideoManager = myVideoManager0;
         scope.mid = 20;
-        scope.url = "./myModel/room/";
+        scope.url = "assets/model/room/";
         scope.camera = camera;
 
         scope.firstLoad(scope.url);
@@ -69,7 +69,7 @@ RoomManager.prototype.init = function() {
     );
     this.room.add(this.myResourceLoader.object);
     this.room.scale.set(10, 10, 10); // 这里在预处理计算包围球时，可以通过设置scene来处理
-    this.myLoad_door('myModel/room/door.gltf');
+    this.myLoad_door('assets/model/room/door.gltf');
 }
 RoomManager.prototype.myLoad_door = function(url) {
     var scope = this;

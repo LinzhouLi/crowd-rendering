@@ -3,7 +3,7 @@ class InstancedGroup {
     constructor(
         instanceCount,
         originMesh,
-        animations,
+        animationUrl,
         textureUrl,
         textureCount,
         camera
@@ -12,12 +12,12 @@ class InstancedGroup {
         // this.obj;
         this.instanceCount = instanceCount;
         this.originMesh = originMesh;
-        this.animations = animations;
+        this.animationUrl = animationUrl;
         this.textureUrl = textureUrl;
         this.textureCount = textureCount;
         this.camera = camera;
 
-        this.haveSkeleton = originMesh.isSkinnedMesh;
+        this.ifAnimated = animationUrl;
         this.dummy = new THREE.Object3D();
         this.time;
 
@@ -32,7 +32,8 @@ class InstancedGroup {
         this.textureType;
 
         // shader
-        this.vertURL = "shader/vertexBone.vert";
+        if (this.ifAnimated) this.vertURL = "shader/vertexBone.vert";
+        else this.vertURL = "shader/vertex.vert"
         this.fragURL = "shader/fragment.frag";
 
     }
@@ -73,7 +74,7 @@ class InstancedGroup {
         material.vertexShader = vertexShader;
         material.fragmentShader = fragmentShader;
 
-        let uniforms = this.haveSkeleton ? this.initAnimation() : { };
+        let uniforms = this.ifAnimated ? await this.initAnimation() : { };
         uniforms.textureCount = { value: this.textureCount };
         uniforms.textureData = { value: textureData };
         material.uniforms = uniforms;
@@ -82,16 +83,17 @@ class InstancedGroup {
 
     }
 
-    initAnimation() {
+    async initAnimation() {
 
+        const animations = await this.loadJSON(this.animationUrl);
         const boneCount = this.originMesh.skeleton.bones.length;
-        const animationData = this.animations.animation.flat();
-        const animationDataLength = this.animations.config.reduce((prev, cur) => prev + cur, 0); // sum
+        const animationData = animations.animation.flat();
+        const animationDataLength = animations.config.reduce((prev, cur) => prev + cur, 0); // sum
         const animationTextureLength = Math.floor(animationDataLength / 3);
         let uniforms = {
             time: { value: 0 },
             boneCount: { value: boneCount },
-            animationFrameCount: { value: this.animations.config[0] / boneCount / 12 },
+            animationFrameCount: { value: animations.config[0] / boneCount / 12 },
             animationTexture: { value: this.array2Texture(animationData) }, // 将动画数据保存为图片Texture格式
             animationTextureLength: { value: animationTextureLength }
         };
@@ -117,9 +119,11 @@ class InstancedGroup {
         geometry.setAttribute('position', this.originMesh.geometry.attributes.position);
         geometry.setAttribute('inUV', this.originMesh.geometry.attributes.uv);
         geometry.setAttribute('normal', this.originMesh.geometry.attributes.normal);
-        if (this.haveSkeleton) {
+        if (this.ifAnimated) {
             geometry.setAttribute('skinIndex', this.originMesh.geometry.attributes.skinIndex);
             geometry.setAttribute('skinWeight', this.originMesh.geometry.attributes.skinWeight);
+            geometry.setAttribute('speed', this.speed);
+            geometry.setAttribute('animationIndex', this.animationType);
         }
 
         geometry.setAttribute('mcol0', this.mcol0);
@@ -127,11 +131,21 @@ class InstancedGroup {
         geometry.setAttribute('mcol2', this.mcol2);
         geometry.setAttribute('mcol3', this.mcol3);
 
-        geometry.setAttribute('speed', this.speed);
-        geometry.setAttribute('animationIndex', this.animationType);
         geometry.setAttribute('textureIndex', this.textureType);
 
         return geometry;
+
+    }
+
+    loadJSON( path ) {
+
+        return new Promise( (resolve, reject) => { 
+            const animationLoader = new THREE.FileLoader();
+            animationLoader.load( path, data => {
+                const animationData = JSON.parse( data );
+                resolve( animationData );
+            } );
+        } );
 
     }
 
@@ -220,30 +234,19 @@ class InstancedGroup {
 
     reset(avatarIndex) {
 
-        this.mcol0.needsUpdate = true;
-        this.mcol1.needsUpdate = true;
-        this.mcol2.needsUpdate = true;
-        this.mcol3.needsUpdate = true;
-        this.animationType.needsUpdate = true;
-        this.textureType.needsUpdate = true;
-        this.speed.needsUpdate = true;
-
         this.mcol0.setXYZ(avatarIndex, 1, 0, 0);
         this.mcol1.setXYZ(avatarIndex, 0, 1, 0);
         this.mcol2.setXYZ(avatarIndex, 0, 0, 1);
         this.mcol3.setXYZ(avatarIndex, 0, 0, 0);
-        this.speed.setX(avatarIndex, 1);
-        this.animationType.setX(avatarIndex, 0);
         this.textureType.setX(avatarIndex, 0);
+        if (this.ifAnimated) {
+            this.speed.setX(avatarIndex, 1);
+            this.animationType.setX(avatarIndex, 0);
+        }
 
     }
 
     setMatrix(avatarIndex, matrix) {
-
-        this.mcol0.needsUpdate = true;
-        this.mcol1.needsUpdate = true;
-        this.mcol2.needsUpdate = true;
-        this.mcol3.needsUpdate = true;
 
         this.mcol0.array[3 * avatarIndex] = matrix.elements[0];
         this.mcol0.array[3 * avatarIndex + 1] = matrix.elements[1];
@@ -265,7 +268,6 @@ class InstancedGroup {
 
     setPosition(avatarIndex, pos) {
 
-        this.mcol3.needsUpdate = true;
         this.mcol3.array[3 * avatarIndex] = pos[0];
         this.mcol3.array[3 * avatarIndex + 1] = pos[1];
         this.mcol3.array[3 * avatarIndex + 2] = pos[2];
@@ -310,23 +312,38 @@ class InstancedGroup {
 
     setTexture(avatarIndex, type) { //设置贴图类型
 
-        this.textureType.needsUpdate = true;
         this.textureType.array[avatarIndex] = type;
 
     }
 
     setAnimation(avatarIndex, type) { // 设置动画类型
 
-        this.animationType.needsUpdate = true;
-        this.animationType.array[avatarIndex + 3] = type;
+        if (this.ifAnimated) {
+            this.animationType.array[avatarIndex + 3] = type;
+        }
 
     }
 
     setSpeed(avatarIndex, speed) { // 设置动画速度
 
-        this.speed.needsUpdate = true;
-        this.speed.array[avatarIndex] = speed;
+        if (this.ifAnimated) {
+            this.speed.array[avatarIndex] = speed;
+        }
 
+    }
+
+    update() {
+
+        this.mcol0.needsUpdate = true;
+        this.mcol1.needsUpdate = true;
+        this.mcol2.needsUpdate = true;
+        this.mcol3.needsUpdate = true;
+        this.textureType.needsUpdate = true;
+        if (this.ifAnimated) {
+            this.animationType.needsUpdate = true;
+            this.speed.needsUpdate = true;
+        }
+        
     }
 
     move(avatarIndex, dPos) {

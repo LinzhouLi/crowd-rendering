@@ -143,7 +143,7 @@ class Net{
 
         // cloth material
         const loader = new THREE.TextureLoader();
-        const clothTexture = loader.load( './img/cloth.jpg' );
+        const clothTexture = loader.load( 'assets/texture/cloth.jpg' );
         //clothTexture.anisotropy = 16;
 
         const clothMaterial = new THREE.MeshLambertMaterial( {
