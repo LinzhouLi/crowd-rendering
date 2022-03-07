@@ -34,7 +34,7 @@ class InstancedGroup {
         // shader
         if (this.ifAnimated) this.vertURL = "shader/vertexBone.vert";
         else this.vertURL = "shader/vertex.vert"
-        this.fragURL = "shader/fragment.frag";
+        this.fragURL = "shader/highFragmentShader.frag";
 
     }
 
