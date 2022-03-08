@@ -19,6 +19,7 @@ in float textureIndex;
 out vec2 outUV;
 out vec3 outNormal;
 out float outTextureIndex;
+out vec3 outPosition;
 // out vec3 lightDirection;
 
 vec3 getAnimationItem(float index) {
@@ -51,6 +52,7 @@ void main() {
     outUV = inUV;
     outNormal = normal;
     outTextureIndex = textureIndex;
+    outPosition = position;
 
     // lightDirection = normalize(cameraPosition - mcol3);
 

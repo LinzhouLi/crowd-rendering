@@ -6,6 +6,8 @@ uniform float textureCount;
 
 in float outTextureIndex;
 in vec2 outUV;
+// in vec3 outNormal;
+// in vec3 outPosition;
 
 out vec4 outColor;
 
@@ -21,7 +23,18 @@ vec4 computeTextureColor() {
 
 }
 
+float lambertDiffuse(vec3 lightDirection, vec3 surfaceNormal) {
+
+    return max(0., dot(lightDirection, surfaceNormal));
+
+}
+
 void main() {
+
+    // vec3 lightPosition = vec3(0, 40.97, 0);
+    // vec3 lightDirection = normalize(lightPosition - outPosition);
+    // vec3 normal = normalize(outNormal);
+    // float power = lambertDiffuse(lightDirection, normal);
 
     outColor = computeTextureColor();
 

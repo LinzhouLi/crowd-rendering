@@ -238,11 +238,11 @@ class InstancedGroup {
         this.mcol1.setXYZ(avatarIndex, 0, 1, 0);
         this.mcol2.setXYZ(avatarIndex, 0, 0, 1);
         this.mcol3.setXYZ(avatarIndex, 0, 0, 0);
-        this.textureType.setX(avatarIndex, 0);
-        if (this.ifAnimated) {
-            this.speed.setX(avatarIndex, 1);
-            this.animationType.setX(avatarIndex, 0);
-        }
+        // this.textureType.setX(avatarIndex, 0);
+        // if (this.ifAnimated) {
+        //     this.speed.setX(avatarIndex, 1);
+        //     this.animationType.setX(avatarIndex, 0);
+        // }
 
     }
 

@@ -14,14 +14,14 @@ class AvatarManager {
         this.manager = {
             params: [],
             config: { // 3级LOD
-                male: {
-                    maxCount: [ 90, 600, 4000 ],
+                male: { // 男性模型
+                    maxCount: [ 55, 370, 3500 ], // 每级LOD的instance数量
                     availableIndices: [ ],
-                    textureCount: 17,
-                    animationCount: 3,
+                    textureCount: 17, // 材质贴图数量
+                    animationCount: 3, // 动作数量
                 },
                 female: {
-                    maxCount: [ 90, 600, 4000 ],
+                    maxCount: [ 55, 370, 3500 ],
                     availableIndices: [ ],
                     textureCount: 18,
                     animationCount: 3,
@@ -37,7 +37,7 @@ class AvatarManager {
             this.manager.config.male.availableIndices.push( range( this.manager.config.male.maxCount[i] ) );
             this.manager.config.female.availableIndices.push( range( this.manager.config.female.maxCount[i] ) );
         }
-        console.log(this.manager)
+        
         function range( count ) {
             return new Array( count ).fill( 0 ).map( (v, i) => i );
         }
@@ -90,7 +90,9 @@ class AvatarManager {
 
         // 占有一个可用index
         param.index = this.manager.config[param.sex].availableIndices[param.LOD].pop();
-        if(param.index==undefined)console.log(param.LOD,param.index) // instances个数不足
+        if ( param.index == undefined ){
+            console.log(`LOD:${param.LOD}的instance数量设置不足!`); // instances个数不足
+        }
         // 人物旋转参数设置
         let rotation = [Math.PI / 2, Math.PI / 2, 3 * Math.PI / 2];
         if ( param.LOD == 2 ) rotation = [Math.PI / 2, 0, 3 * Math.PI / 2];
@@ -125,57 +127,13 @@ class AvatarManager {
                 param.animationType = Math.floor( Math.random() * this.manager.config.male.animationCount );
                 param.sex = "male";
             }
-            else { // 以0.4的概率生成女性
+            else { // 以0.5的概率生成女性
                 param.textureType = Math.floor( Math.random() * this.manager.config.female.textureCount );
                 param.animationType = Math.floor( Math.random() * this.manager.config.female.animationCount );
                 param.sex = "female";
             }
             this.manager.params.push( param );
         }
-
-        function vecAdd( a, b ) {
-            return [ a[0] + b[0], a[1] + b[1], a[2] + b[2] ];
-        }
-
-    }
-
-    async createAvatar() {
-
-        // 人群随机参数化
-        this.initAvatarParams();
-
-        // 导入动画数据
-        const animationData = await this.loadJSON( "assets/animation/male_high_animations.json" );
-        const animationCount = animationData.config.length;
-
-        // 男性模型贴图资源设置
-        const maleModelPath = "assets/model/avatar/male_high.glb";
-        const maleTexturePath = "assets/texture/m2.jpg";
-        const maleTextureCount = 32;
-
-        // 女性性模型贴图资源设置
-        const femaleModelPath = "assets/model/avater/female_high.glb";
-        const femaleTexturePath = "assets/texture/w2.jpg";
-        const femaleTexureCount = 16;
-
-        // 生成实例化对象
-        const maleInstanceGroupL0 = await this.createInstancedGroup( 
-            this.manager.config.male.maxCount[0], 
-            maleModelPath, 
-            animationData, 
-            maleTexturePath, 
-            maleTextureCount
-        );
-        this.manager.instanceGroup.male.push( maleInstanceGroupL0 );
-        // await this.createInstancedGroup( 
-        //     this.femaleParams, 
-        //     femaleModelPath, 
-        //     animationData, 
-        //     femaleTexturePath, 
-        //     femaleTexureCount
-        // );
-
-        this.created = true;
 
         function vecAdd( a, b ) {
             return [ a[0] + b[0], a[1] + b[1], a[2] + b[2] ];
