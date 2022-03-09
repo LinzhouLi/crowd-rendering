@@ -23,6 +23,6 @@ vec4 computeTextureColor() {
 
 void main() {
 
-    outColor = computeTextureColor();
+    outColor = vec4(computeTextureColor().xyz * 0.8, 1.);
 
 }

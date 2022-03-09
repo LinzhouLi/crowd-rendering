@@ -10,32 +10,70 @@ class LODController {
         this.lodLevels = [200, 5000] // LOD分为三等, 此数组数字为距离平方
 
         // 计算LOD与视锥剔除
-        this.computeDistance = gpu.createKernel(function( positions, cameraPosition, lodLevels, frustumPlanes ) {
+        this.computeDistanceGPU = gpu.createKernel(function( cameraPosition, frustumPlanes ) {
 
             for ( let i = 0; i < this.constants.planeCount; i++ ) {
                 // 计算: dot(PlaneNormal, Point) + PlaneConstant
-                let distanceToPlane = positions[this.thread.x][0] * frustumPlanes[i * 4];
-                distanceToPlane += positions[this.thread.x][1] * frustumPlanes[i * 4 + 1];
-                distanceToPlane += positions[this.thread.x][2] * frustumPlanes[i * 4 + 2];
+                let distanceToPlane = this.constants.positions[this.thread.x][0] * frustumPlanes[i * 4];
+                distanceToPlane += this.constants.positions[this.thread.x][1] * frustumPlanes[i * 4 + 1];
+                distanceToPlane += this.constants.positions[this.thread.x][2] * frustumPlanes[i * 4 + 2];
                 distanceToPlane += frustumPlanes[i* 4 + 3];
                 if ( distanceToPlane < 0 ) return -1;
             }
 
             // 计算LOD
-            const a = positions[this.thread.x][0] - cameraPosition[0];
-            const b = positions[this.thread.x][1] - cameraPosition[1];
-            const c = positions[this.thread.x][2] - cameraPosition[2];
+            const a = this.constants.positions[this.thread.x][0] - cameraPosition[0];
+            const b = this.constants.positions[this.thread.x][1] - cameraPosition[1];
+            const c = this.constants.positions[this.thread.x][2] - cameraPosition[2];
             const distance = a * a + b * b + c * c; // 距离平方
 
             let lod = 2; // lod: 0, 1, 2
-            if ( distance < lodLevels[0] ) lod = 0;
-            else if ( distance < lodLevels[1] ) lod = 1;
+            if ( distance < this.constants.lodLevels[0] ) lod = 0;
+            else if ( distance < this.constants.lodLevels[1] ) lod = 1;
             return lod;
 
         }, {
-            constants: { planeCount: this.planeIndecies.length },
+            constants: { 
+                positions: this.positions,
+                lodLevels: this.lodLevels,
+                planeCount: this.planeIndecies.length
+            },
             output: [ this.positions.length ]
         });
+
+    }
+
+    computeDistanceCPU( cameraPosition, frustumPlanes ) {
+
+        let result = [];
+        let camera = new THREE.Vector3( ...cameraPosition );
+
+        for ( let i = 0; i < this.positions.length; i++ ) {
+
+            let flag = true;
+            let point = new THREE.Vector3( ...(this.positions[i]) );
+
+            // 视锥剔除
+            for ( let j = 0; j < this.planeIndecies.length; j++ ) {
+                if ( this.frustum.planes[ this.planeIndecies[j] ].distanceToPoint( point ) < 0 ) {
+                    result.push( -1 );
+                    flag = false;
+                    break;
+                }
+            }
+
+            // LOD
+            if ( flag ) {
+                let distance = camera.distanceToSquared( point );
+                let lod = 2;
+                if ( distance < this.lodLevels[0] ) lod = 0;
+                else if ( distance < this.lodLevels[1] ) lod = 1;
+                result.push( lod )
+            }
+
+        }
+
+        return result;
 
     }
 
@@ -54,7 +92,7 @@ class LODController {
             );
         }
 
-        return this.computeDistance( this.positions, this.camera.position.toArray(), this.lodLevels, frustumPlanes );
+        return this.computeDistanceCPU( this.camera.position.toArray(), frustumPlanes );
 
     }
 

@@ -15,13 +15,13 @@ class AvatarManager {
             params: [],
             config: { // 3级LOD
                 male: { // 男性模型
-                    maxCount: [ 55, 370, 3500 ], // 每级LOD的instance数量
+                    maxCount: [ 60, 500, 3500 ], // 每级LOD的instance数量
                     availableIndices: [ ],
                     textureCount: 17, // 材质贴图数量
                     animationCount: 3, // 动作数量
                 },
                 female: {
-                    maxCount: [ 55, 370, 3500 ],
+                    maxCount: [ 60, 500, 3500 ],
                     availableIndices: [ ],
                     textureCount: 18,
                     animationCount: 3,
@@ -55,7 +55,7 @@ class AvatarManager {
     }
 
     updateLOD() {
-
+        
         let lod = this.lodController.update();
         for (let i = 0; i < lod.length; i++) {
             if (lod[i] != this.manager.params[i].LOD) {
@@ -147,15 +147,18 @@ class AvatarManager {
         const highModelPath = "assets/model/avatar/male_high.glb";
         const highAnimationPath = "assets/animation/male_high_animations.json";
         const highTexturePath = "assets/texture/maleTextureHigh.jpg";
+        const highVertexShader = "shader/highVertexShader.vert";
         const highFragmentShader = "shader/highFragmentShader.frag";
 
         const mediumModelPath = "assets/model/avatar/male_medium.glb";
         const mediumAnimationPath = "assets/animation/male_medium_animations.json";
         const mediumTexturePath = "assets/texture/maleTextureMedium.jpg";
+        const mediumVertexShader = "shader/mediumVertexShader.vert";
         const mediumFragmentShader = "shader/mediumFragmentShader.frag";
 
         const lowModelPath = "assets/model/avatar/male_low.glb";
         const lowTexturePath = "assets/texture/maleTextureLow.jpg";
+        const lowVertexShader = "shader/lowVertexShader.vert";
         const lowFragmentShader = "shader/lowFragmentShader.frag";
 
         // load
@@ -177,6 +180,7 @@ class AvatarManager {
             this.manager.config.male.textureCount,
             this.camera
         );
+        highInstanceGroup.vertURL = highVertexShader;
         highInstanceGroup.fragURL = highFragmentShader;
         this.manager.instanceGroup.male.push( highInstanceGroup );
         const highInstanceMesh = await highInstanceGroup.init();
@@ -191,6 +195,7 @@ class AvatarManager {
             this.manager.config.male.textureCount,
             this.camera
         );
+        mediumInstanceGroup.vertURL = mediumVertexShader;
         mediumInstanceGroup.fragURL = mediumFragmentShader;
         this.manager.instanceGroup.male.push( mediumInstanceGroup );
         const mediumInstanceMesh = await mediumInstanceGroup.init();
@@ -205,7 +210,8 @@ class AvatarManager {
             this.manager.config.male.textureCount,
             this.camera
         );
-        mediumInstanceGroup.fragURL = mediumFragmentShader;
+        lowInstanceGroup.vertURL = lowVertexShader;
+        lowInstanceGroup.fragURL = lowFragmentShader;
         this.manager.instanceGroup.male.push( lowInstanceGroup );
         const lowInstanceMesh = await lowInstanceGroup.init();
         this.obj.add( lowInstanceMesh );
@@ -218,15 +224,18 @@ class AvatarManager {
         const highModelPath = "assets/model/avatar/female_high.glb";
         const highAnimationPath = "assets/animation/female_high_animations.json";
         const highTexturePath = "assets/texture/femaleTextureHigh.jpg";
+        const highVertexShader = "shader/highVertexShader.vert";
         const highFragmentShader = "shader/highFragmentShader.frag";
 
         const mediumModelPath = "assets/model/avatar/female_medium.glb";
         const mediumAnimationPath = "assets/animation/female_medium_animations.json";
         const mediumTexturePath = "assets/texture/femaleTextureMedium.jpg";
+        const mediumVertexShader = "shader/mediumVertexShader.vert";
         const mediumFragmentShader = "shader/mediumFragmentShader.frag";
 
         const lowModelPath = "assets/model/avatar/female_low.glb";
-        const lowTexturePath = "assets/texture/femaleTextureHigh.jpg";
+        const lowTexturePath = "assets/texture/femaleTextureLow.jpg";
+        const lowVertexShader = "shader/lowVertexShader.vert";
         const lowFragmentShader = "shader/lowFragmentShader.frag";
 
         // load
@@ -248,6 +257,7 @@ class AvatarManager {
             this.manager.config.female.textureCount,
             this.camera
         );
+        highInstanceGroup.vertURL = highVertexShader;
         highInstanceGroup.fragURL = highFragmentShader;
         this.manager.instanceGroup.female.push( highInstanceGroup );
         const highInstanceMesh = await highInstanceGroup.init();
@@ -262,6 +272,7 @@ class AvatarManager {
             this.manager.config.female.textureCount,
             this.camera
         );
+        mediumInstanceGroup.vertURL = mediumVertexShader;
         mediumInstanceGroup.fragURL = mediumFragmentShader;
         this.manager.instanceGroup.female.push( mediumInstanceGroup );
         const mediumInstanceMesh = await mediumInstanceGroup.init();
@@ -276,6 +287,7 @@ class AvatarManager {
             this.manager.config.female.textureCount,
             this.camera
         );
+        lowInstanceGroup.vertURL = lowVertexShader;
         lowInstanceGroup.fragURL = lowFragmentShader;
         this.manager.instanceGroup.female.push( lowInstanceGroup );
         const lowInstanceMesh = await lowInstanceGroup.init();

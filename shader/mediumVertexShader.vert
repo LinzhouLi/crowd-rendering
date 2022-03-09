@@ -17,10 +17,9 @@ in float animationIndex; // 动画类型
 in float textureIndex;
 
 out vec2 outUV;
-out vec3 outNormal;
+// out vec3 outNormal;
 out float outTextureIndex;
-out vec3 outPosition;
-// out vec3 lightDirection;
+// out vec3 outPosition;
 
 vec3 getAnimationItem(float index) {
 
@@ -32,38 +31,32 @@ vec3 getAnimationItem(float index) {
 
 }
 
-mat4 computeAnimationMatrix() {
+mat4 computeAnimationMatrix(float boneIndex) {
 
-    float boneIndex = skinIndex[0];
     float frameIndex = float(int(time * speed) % int(animationFrameCount));
     float startPos = 4. * (boneCount * (animationIndex * animationFrameCount + frameIndex) + boneIndex);
-    mat4 m =  mat4(
-        vec4(getAnimationItem(startPos+0.), 0),
-        vec4(getAnimationItem(startPos+1.), 0),
-        vec4(getAnimationItem(startPos+2.), 0),
-        vec4(getAnimationItem(startPos+3.), 1)
+    return mat4(
+        vec4(getAnimationItem(startPos+0.), 0.),
+        vec4(getAnimationItem(startPos+1.), 0.),
+        vec4(getAnimationItem(startPos+2.), 0.),
+        vec4(getAnimationItem(startPos+3.), 1.)
     );
-    return m;
     
 }
 
 void main() {
 
     outUV = inUV;
-    outNormal = normal;
     outTextureIndex = textureIndex;
-    outPosition = position;
 
-    // lightDirection = normalize(cameraPosition - mcol3);
-
-    mat4 animationMatrix = computeAnimationMatrix();
+    mat4 animationMatrix = computeAnimationMatrix(skinIndex[0]);
     mat4 transformMatrix = mat4(
-        vec4(mcol0, 0),
-        vec4(mcol1, 0),
-        vec4(mcol2, 0),
-        vec4(mcol3, 1)
+        vec4(mcol0, 0.),
+        vec4(mcol1, 0.),
+        vec4(mcol2, 0.),
+        vec4(mcol3, 1.)
     );
 
-    gl_Position = projectionMatrix * modelViewMatrix * transformMatrix * animationMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * transformMatrix * animationMatrix * vec4(position, 1.);
 
 }

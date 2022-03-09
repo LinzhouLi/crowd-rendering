@@ -32,8 +32,8 @@ class InstancedGroup {
         this.textureType;
 
         // shader
-        if (this.ifAnimated) this.vertURL = "shader/vertexBone.vert";
-        else this.vertURL = "shader/vertex.vert"
+        if (this.ifAnimated) this.vertURL = "shader/mdediumVerxtexShader.vert";
+        else this.vertURL = "shader/lowVertexShader.vert"
         this.fragURL = "shader/highFragmentShader.frag";
 
     }
@@ -234,9 +234,9 @@ class InstancedGroup {
 
     reset(avatarIndex) {
 
-        this.mcol0.setXYZ(avatarIndex, 1, 0, 0);
-        this.mcol1.setXYZ(avatarIndex, 0, 1, 0);
-        this.mcol2.setXYZ(avatarIndex, 0, 0, 1);
+        this.mcol0.setXYZ(avatarIndex, 0.1, 0, 0);
+        this.mcol1.setXYZ(avatarIndex, 0, 0.1, 0);
+        this.mcol2.setXYZ(avatarIndex, 0, 0, 0.1);
         this.mcol3.setXYZ(avatarIndex, 0, 0, 0);
         // this.textureType.setX(avatarIndex, 0);
         // if (this.ifAnimated) {
