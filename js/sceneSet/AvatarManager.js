@@ -111,17 +111,27 @@ class AvatarManager {
                 scale: [ 2.6, 2.6, 2.6 ],
                 animationSpeed: 1 + Math.random() * 0.4,
                 LOD: -1,
-                textureType: 0,
+                textureType: [0, 0, 0, 0],
                 animationType: 0
             }
             if (Math.random() < 0.5) { // 以0.5的概率生成男性
-                param.textureType = Math.floor( Math.random() * this.manager.config.male.textureCount );
                 param.animationType = Math.floor( Math.random() * this.manager.config.male.animationCount );
+                param.textureType = [
+                    Math.floor( Math.random() * this.manager.config.male.textureCount ),
+                    Math.floor( Math.random() * this.manager.config.male.textureCount ),
+                    Math.floor( Math.random() * this.manager.config.male.textureCount ),
+                    Math.floor( Math.random() * this.manager.config.male.textureCount )
+                ];
                 param.sex = "male";
             }
             else { // 以0.5的概率生成女性
-                param.textureType = Math.floor( Math.random() * this.manager.config.female.textureCount );
                 param.animationType = Math.floor( Math.random() * this.manager.config.female.animationCount );
+                param.textureType = [
+                    Math.floor( Math.random() * this.manager.config.female.textureCount ),
+                    Math.floor( Math.random() * this.manager.config.female.textureCount ),
+                    Math.floor( Math.random() * this.manager.config.female.textureCount ),
+                    Math.floor( Math.random() * this.manager.config.female.textureCount )
+                ];
                 param.sex = "female";
             }
             this.manager.params.push( param );
@@ -134,6 +144,22 @@ class AvatarManager {
     }
 
     async createMaleAvatar() {
+
+        // body
+        const body = {
+            head: [
+                0.5322, 0.70654296875,
+                1, 1
+            ],
+            hand: [
+                0.20703125, 0.41259765625,
+                0.7275390625, 0.57958984375
+            ],
+            bottom: [
+                0, 0.6, 
+                0.5322, 1
+            ]
+        };
 
         // 资源路径设置
         const highModelPath = "assets/model/avatar/male_high.glb";
@@ -172,6 +198,7 @@ class AvatarManager {
             this.manager.config.male.textureCount,
             this.camera
         );
+        highInstanceGroup.body = body;
         highInstanceGroup.vertURL = highVertexShader;
         highInstanceGroup.fragURL = highFragmentShader;
         this.manager.instanceGroup.male.push( highInstanceGroup );
@@ -187,6 +214,7 @@ class AvatarManager {
             this.manager.config.male.textureCount,
             this.camera
         );
+        mediumInstanceGroup.body = body;
         mediumInstanceGroup.vertURL = mediumVertexShader;
         mediumInstanceGroup.fragURL = mediumFragmentShader;
         this.manager.instanceGroup.male.push( mediumInstanceGroup );
@@ -211,6 +239,22 @@ class AvatarManager {
     }
 
     async createFemaleAvatar() {
+
+        // body
+        const body = {
+            head: [
+                0.5322, 0.70654296875,
+                1, 1
+            ],
+            hand: [
+                0.20703125, 0.41259765625,
+                0.7275390625, 0.57958984375
+            ],
+            bottom: [
+                0, 0.6, 
+                0.5322, 1
+            ]
+        };
 
         // 资源路径设置
         const highModelPath = "assets/model/avatar/female_high.glb";
@@ -249,6 +293,7 @@ class AvatarManager {
             this.manager.config.female.textureCount,
             this.camera
         );
+        highInstanceGroup.body = body;
         highInstanceGroup.vertURL = highVertexShader;
         highInstanceGroup.fragURL = highFragmentShader;
         this.manager.instanceGroup.female.push( highInstanceGroup );
@@ -264,6 +309,7 @@ class AvatarManager {
             this.manager.config.female.textureCount,
             this.camera
         );
+        mediumInstanceGroup.body = body;
         mediumInstanceGroup.vertURL = mediumVertexShader;
         mediumInstanceGroup.fragURL = mediumFragmentShader;
         this.manager.instanceGroup.female.push( mediumInstanceGroup );

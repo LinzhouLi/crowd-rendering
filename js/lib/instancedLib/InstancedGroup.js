@@ -31,6 +31,13 @@ class InstancedGroup {
         this.animationType;
         this.textureType;
 
+        // body
+        this.body = {
+            head: [],
+            hand: [],
+            bottom: []
+        }
+
         // shader
         if (this.ifAnimated) this.vertURL = "shader/mdediumVerxtexShader.vert";
         else this.vertURL = "shader/lowVertexShader.vert"
@@ -46,7 +53,7 @@ class InstancedGroup {
         this.mcol1 = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
         this.mcol2 = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
         this.mcol3 = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
-        this.textureType = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
+        this.textureType = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 4), 4);
         if (this.ifAnimated) {
             this.speed = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
             this.animationType = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
@@ -79,6 +86,11 @@ class InstancedGroup {
         let uniforms = this.ifAnimated ? await this.initAnimation() : { };
         uniforms.textureCount = { value: this.textureCount };
         uniforms.textureData = { value: textureData };
+        if( this.ifAnimated ) {
+            uniforms.headUV = { value: new THREE.Vector4(...this.body.head) };
+            uniforms.handUV = { value: new THREE.Vector4(...this.body.hand) };
+            uniforms.bottomUV = { value: new THREE.Vector4(...this.body.bottom) };
+        }
         material.uniforms = uniforms;
 
         return material;
@@ -240,11 +252,6 @@ class InstancedGroup {
         this.mcol1.setXYZ(avatarIndex, 0, 0.1, 0);
         this.mcol2.setXYZ(avatarIndex, 0, 0, 0.1);
         this.mcol3.setXYZ(avatarIndex, 0, 0, 0);
-        // this.textureType.setX(avatarIndex, 0);
-        // if (this.ifAnimated) {
-        //     this.speed.setX(avatarIndex, 1);
-        //     this.animationType.setX(avatarIndex, 0);
-        // }
 
     }
 
@@ -314,7 +321,10 @@ class InstancedGroup {
 
     setTexture(avatarIndex, type) { //设置贴图类型
 
-        this.textureType.array[avatarIndex] = type;
+        this.textureType.array[avatarIndex * 4] = type[0]; // 大部分区域
+        this.textureType.array[avatarIndex * 4 + 1] = type[1]; // 头部和手部
+        this.textureType.array[avatarIndex * 4 + 2] = type[2]; // 裤子
+        this.textureType.array[avatarIndex * 4 + 3] = type[3];
 
     }
 

@@ -13,11 +13,11 @@ in vec4 skinIndex, skinWeight; // 仅使用了绑定的第一个骨骼
 in vec3 mcol0, mcol1, mcol2, mcol3;
 in float speed;
 in float animationIndex; // 动画类型
-in float textureIndex;
+in vec4 textureIndex;
 
 out vec2 outUV;
 out vec3 outNormal;
-out float outTextureIndex;
+out vec4 outTextureIndex;
 out vec3 outPosition;
 
 vec3 getAnimationItem(float index) {
