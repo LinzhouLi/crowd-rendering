@@ -16,11 +16,10 @@ class InstancedGroup {
         this.textureUrl = textureUrl;
         this.textureCount = textureCount;
         this.camera = camera;
-        this.clock = new THREE.Clock();
 
+        this.clock = new THREE.Clock();
         this.ifAnimated = animationUrl;
         this.dummy = new THREE.Object3D();
-        this.time;
 
         // matrix
         this.mcol0;
