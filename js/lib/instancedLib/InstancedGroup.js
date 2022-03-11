@@ -99,13 +99,16 @@ class InstancedGroup {
         };
         
         let scope = this;
+        var time0=performance.now()
         updateAnimation();
 
         return uniforms;
 
         function updateAnimation() {
-            let time = uniforms.time.value;
-            uniforms.time = { value: (time + 1.0) % 60000 };
+            //let time = uniforms.time.value;
+            uniforms.time = { 
+                value: 15*(performance.now()-time0)/1000//(time + 1.0) % 60000 
+            };
             uniforms.cameraPosition = { value: scope.camera.position };
             requestAnimationFrame(updateAnimation);
         }
