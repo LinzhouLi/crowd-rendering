@@ -9,13 +9,14 @@ class InstancedGroup {
         camera
     ) {
 
-        // this.obj;
+        this.mesh;
         this.instanceCount = instanceCount;
         this.originMesh = originMesh;
         this.animationUrl = animationUrl;
         this.textureUrl = textureUrl;
         this.textureCount = textureCount;
         this.camera = camera;
+        this.clock = new THREE.Clock();
 
         this.ifAnimated = animationUrl;
         this.dummy = new THREE.Object3D();
@@ -40,16 +41,17 @@ class InstancedGroup {
 
     async init() {
 
-        // this.obj = new THREE.Object3D();
         this.originMesh.geometry = this.originMesh.geometry.toNonIndexed();
 
         this.mcol0 = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
         this.mcol1 = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
         this.mcol2 = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
         this.mcol3 = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
-        this.speed = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
-        this.animationType = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
         this.textureType = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
+        if (this.ifAnimated) {
+            this.speed = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
+            this.animationType = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
+        }
 
         for (let i = 0; i < this.instanceCount; i++) {
             this.reset(i);
@@ -57,8 +59,9 @@ class InstancedGroup {
 
         const material = await this.initMaterial();
         const geometry = this.initGeometry();
-        const mesh = new THREE.Mesh(geometry, material);
+        const mesh = new THREE.InstancedMesh(geometry, material, this.instanceCount);
         mesh.frustumCulled = false;
+        this.mesh = mesh;
 
         return mesh;
 
@@ -104,8 +107,8 @@ class InstancedGroup {
         return uniforms;
 
         function updateAnimation() {
-            let time = uniforms.time.value;
-            uniforms.time = { value: (time + 1.0) % 60000 };
+            let time = Math.floor(10 * scope.clock.getElapsedTime());
+            uniforms.time = { value: time % 60000 };
             uniforms.cameraPosition = { value: scope.camera.position };
             requestAnimationFrame(updateAnimation);
         }
@@ -319,7 +322,7 @@ class InstancedGroup {
     setAnimation(avatarIndex, type) { // 设置动画类型
 
         if (this.ifAnimated) {
-            this.animationType.array[avatarIndex + 3] = type;
+            this.animationType.array[avatarIndex] = type;
         }
 
     }
