@@ -9,6 +9,8 @@ uniform vec4 bottomUV;
 
 in vec4 outTextureIndex;
 in vec2 outUV;
+in vec3 outNormal;
+in vec3 outPosition;
 
 out vec4 outColor;
 
@@ -46,6 +48,13 @@ vec4 computeTextureColor() {
 
 void main() {
 
-    outColor = vec4(computeTextureColor().xyz * 0.8, 1.);
+    vec3 lightPosition = vec3(0., 40.97, 0.);
+
+    vec3 textureColor = computeTextureColor().xyz;
+    vec3 lightDirection = normalize(lightPosition - outPosition);
+
+    vec3 diffuse = textureColor * max(0., dot(lightDirection, normalize(outNormal)));
+
+    outColor = vec4(diffuse * 0.4 + textureColor * 0.6, 1.);
 
 }

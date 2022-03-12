@@ -17,9 +17,9 @@ in float animationIndex; // 动画类型
 in vec4 textureIndex;
 
 out vec2 outUV;
-// out vec3 outNormal;
+out vec3 outNormal;
 out vec4 outTextureIndex;
-// out vec3 outPosition;
+out vec3 outPosition;
 
 vec3 getAnimationItem(float index) {
 
@@ -57,6 +57,10 @@ void main() {
         vec4(mcol3, 1.)
     );
 
-    gl_Position = projectionMatrix * modelViewMatrix * transformMatrix * animationMatrix * vec4(position, 1.);
+    outNormal = (transformMatrix * animationMatrix * vec4(normal, 0.)).xyz;
+    vec4 position = transformMatrix * animationMatrix * vec4(position, 1.);
+    outPosition = position.xyz;
+
+    gl_Position = projectionMatrix * modelViewMatrix * position;
 
 }

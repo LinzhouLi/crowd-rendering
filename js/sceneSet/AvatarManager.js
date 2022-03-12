@@ -6,7 +6,10 @@ class AvatarManager {
     constructor( seatPositions, camera ) {
         
         this.obj = new THREE.Object3D();
-        this.seatPositions = seatPositions;
+
+        const positionBias = [ 1.9, 1.4, 0 ]; // 微调人物位置
+        this.seatPositions = seatPositions.map( x => vecAdd(x, positionBias));
+
         this.camera = camera;
         this.lodController = new LODController( seatPositions, camera );
         this.created = false;
@@ -33,6 +36,10 @@ class AvatarManager {
         
         function range( count ) {
             return new Array( count ).fill( 0 ).map( (v, i) => i );
+        }
+
+        function vecAdd( a, b ) {
+            return [ a[0] + b[0], a[1] + b[1], a[2] + b[2] ];
         }
 
     }
@@ -104,10 +111,9 @@ class AvatarManager {
 
     initAvatarParams() {
 
-        const positionBias = [ 1.6, 1.2, 0 ]; // 微调人物位置
         for (let i = 0; i < this.seatPositions.length; i++) {
             let param = {
-                position: vecAdd( this.seatPositions[i], positionBias ),
+                position: this.seatPositions[i],
                 scale: [ 2.6, 2.6, 2.6 ],
                 animationSpeed: 1 + Math.random() * 0.4,
                 LOD: -1,
@@ -135,10 +141,6 @@ class AvatarManager {
                 param.sex = "female";
             }
             this.manager.params.push( param );
-        }
-
-        function vecAdd( a, b ) {
-            return [ a[0] + b[0], a[1] + b[1], a[2] + b[2] ];
         }
 
     }

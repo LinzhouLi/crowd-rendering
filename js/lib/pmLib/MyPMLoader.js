@@ -68,7 +68,7 @@ MyPMLoader.prototype = {
 
 
         //加载基模的三个JSON文件,然后进行解析、执行parse函数
-        var loader = new THREE.XHRLoader(THREE.DefaultLoadingManager);
+        var loader = new THREE.FileLoader(THREE.DefaultLoadingManager);
         var baseMeshUrl = this.url + '/basemesh.json';
         var skeletonUrl = this.url + '/skeleton.json';
         var skeletonIndexUrl = this.url + '/skeletonindex.json';

@@ -98,7 +98,7 @@ void main() {
 
     Material material = Material(
         computeTextureColor().rgb,
-        0.7, 0.15, 0.15,
+        0.6, 0.3, 0.2,
         16.
     );
     

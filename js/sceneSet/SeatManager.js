@@ -62,6 +62,11 @@ class SeatManager {
                 mesh1.setMatrixAt(i, dummy.matrix);
                 mesh2.setMatrixAt(i, dummy.matrix);
             }
+            
+            mesh1.castShadow = true; // 阴影
+            mesh1.receiveShadow = true;
+            mesh2.castShadow = true; // 阴影
+            mesh2.receiveShadow = true;
 
             this.chairs.add(mesh1);
             this.chairs.add(mesh2);

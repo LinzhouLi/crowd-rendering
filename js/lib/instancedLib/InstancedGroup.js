@@ -66,6 +66,8 @@ class InstancedGroup {
         const material = await this.initMaterial();
         const geometry = this.initGeometry();
         const mesh = new THREE.InstancedMesh(geometry, material, this.instanceCount);
+        mesh.castShadow = true; // 阴影
+        mesh.receiveShadow = true;
         mesh.frustumCulled = false;
         this.mesh = mesh;
 
