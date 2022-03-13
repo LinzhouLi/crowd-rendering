@@ -117,6 +117,7 @@ class InstancedGroup {
         };
         
         let scope = this;
+        
         updateAnimation();
 
         return uniforms;
