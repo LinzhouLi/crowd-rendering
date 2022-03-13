@@ -9,11 +9,11 @@ in vec3 position;
 in vec2 inUV;
 in vec3 normal;
 in vec3 mcol0, mcol1, mcol2, mcol3;
-in float textureIndex;
+in vec4 textureIndex;
 
 out vec2 outUV;
 out vec3 outNormal;
-out float outTextureIndex;
+out vec4 outTextureIndex;
 // out vec3 lightDirection;
 
 void main() {

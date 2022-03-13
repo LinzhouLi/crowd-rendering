@@ -1,5 +1,4 @@
 import { ResourceLoader } from '../ResourceLoader.js';
-import { Network } from'../Network.js';
 
 class RoomManager{
     loader;
@@ -12,13 +11,11 @@ class RoomManager{
     resourceManager;
 
     myResourceLoader;
-    myNetwork;
 
     constructor(myVideoManager0, camera) {
         var scope = this;
         scope.loader = new THREE.GLTFLoader();
         scope.room = new THREE.Object3D();
-        scope.myNetwork = new Network();
         scope.myVideoManager = myVideoManager0;
         scope.mid = 20;
         scope.url = "assets/model/room/";
@@ -29,15 +26,16 @@ class RoomManager{
     }
     firstLoad(url) { // scope.url+"first.glb"
         var scope = this;
-        scope.myNetwork.getGlb(`${url}first.glb`, glb => {
+        new THREE.GLTFLoader().load(`${url}first.glb`, glb => {
             // 每个材质一个mesh
             scope.room.add(glb.scene);
-            new THREE.XHRLoader(THREE.DefaultLoadingManager).load(`${url}test.json`, function (data) {
+            new THREE.FileLoader(THREE.DefaultLoadingManager).load(`${url}test.json`, function (data) {
                 var json = JSON.parse(data);
                 var list = json.list;
                 var mapsIndex = json.mapsIndex;
 
                 glb.scene.traverse(node => {
+                    node.receiveShadow = true; // 阴影
                     if(node instanceof THREE.Mesh){
                         if (node.name === "室内-小显示器屏幕（非）"||
                             node.name === "室内-大显示器屏幕（非）") { //室内-大显示器屏幕（非）
@@ -48,7 +46,7 @@ class RoomManager{
                         }
                         var index = parseInt(list[node.name]);
                         if (mapsIndex[index]) {
-                            scope.myNetwork.getTexture(`${url}ConferenceRoom${index}.jpg`, texture => {
+                            new THREE.TextureLoader().load(`${url}ConferenceRoom${index}.jpg`, texture => {
                                 texture.wrapS = THREE.RepeatWrapping;
                                 texture.wrapT = THREE.RepeatWrapping;
                                 node.material = new THREE.MeshBasicMaterial({ map: texture });
@@ -69,9 +67,9 @@ RoomManager.prototype.init = function() {
     );
     this.room.add(this.myResourceLoader.object);
     this.room.scale.set(10, 10, 10); // 这里在预处理计算包围球时，可以通过设置scene来处理
-    this.myLoad_door('assets/model/room/door.gltf');
+    this.loadDoor('assets/model/room/door.gltf');
 }
-RoomManager.prototype.myLoad_door = function(url) {
+RoomManager.prototype.loadDoor = function(url) {
     var scope = this;
     scope.loader.load(url, gltf => {
         var geometry0 = gltf.scene.children[0].children[0].geometry;
@@ -170,6 +168,13 @@ RoomManager.prototype.myLoad_door = function(url) {
             }
 
         }
+
+        mesh0.castShadow = true; // 阴影
+        mesh0.receiveShadow = true;
+        mesh1.castShadow = true; // 阴影
+        mesh1.receiveShadow = true;
+        mesh2.castShadow = true; // 阴影
+        mesh2.receiveShadow = true;
 
         scope.room.add(mesh0);
         scope.room.add(mesh1);

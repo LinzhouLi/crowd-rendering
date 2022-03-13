@@ -6,8 +6,8 @@ class LODController {
         this.camera = camera;
         this.frustum = new THREE.Frustum();
         const gpu = new GPU();
-        this.planeIndecies = [ 0, 1, 3 ]; // 用哪些面进行视锥剔除 0:右 1:左 2:下 3:上 4:远 5:近
-        this.lodLevels = [200, 5000] // LOD分为三等, 此数组数字为距离平方
+        this.planeIndecies = [ 0, 1, 2, 3 ]; // 用哪些面进行视锥剔除 0:右 1:左 2:下 3:上 4:远 5:近
+        this.lodLevels = [300, 5000] // LOD分为三等, 此数组数字为距离平方
 
         // 计算LOD与视锥剔除
         this.computeDistanceGPU = gpu.createKernel(function( cameraPosition, frustumPlanes ) {
@@ -84,6 +84,7 @@ class LODController {
         this.frustum.setFromProjectionMatrix( matrix );
 
         let frustumPlanes = [];
+        this.frustum.planes[2].constant += 4;
         for ( let i = 0; i < this.planeIndecies.length; i++ ) {
             // 每个面由一个四维向量表示(法向量+与原点距离)
             frustumPlanes.push( 

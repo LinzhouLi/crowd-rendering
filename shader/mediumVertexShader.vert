@@ -14,18 +14,24 @@ in vec4 skinIndex, skinWeight; // 仅使用了绑定的第一个骨骼
 in vec3 mcol0, mcol1, mcol2, mcol3;
 in float speed;
 in float animationIndex; // 动画类型
-in float textureIndex;
+in vec4 textureIndex;
 
 out vec2 outUV;
-// out vec3 outNormal;
-out float outTextureIndex;
-// out vec3 outPosition;
+out vec3 outNormal;
+out vec4 outTextureIndex;
+out vec3 outPosition;
 
-vec3 getAnimationItem(float index) {
+vec3 getAnimationItem(float index) { // 从texture中提取矩阵元素
 
+    // vec3 data = texture(
+    //     animationTexture, 
+    //     vec2( 0.5, (0.5 + index) / animationTextureLength )
+    // ).xyz;
+    float v = floor(index / animationTextureLength);
+    float u = index - v * animationTextureLength;
     vec3 data = texture(
         animationTexture, 
-        vec2( 0.5, (0.5 + index) / animationTextureLength )
+        vec2( (0.5 + u) / animationTextureLength, (0.5 + v) / animationTextureLength )
     ).xyz;
     return data;
 
@@ -57,6 +63,10 @@ void main() {
         vec4(mcol3, 1.)
     );
 
-    gl_Position = projectionMatrix * modelViewMatrix * transformMatrix * animationMatrix * vec4(position, 1.);
+    outNormal = (transformMatrix * animationMatrix * vec4(normal, 0.)).xyz;
+    vec4 position = transformMatrix * animationMatrix * vec4(position, 1.);
+    outPosition = position.xyz;
+
+    gl_Position = projectionMatrix * modelViewMatrix * position;
 
 }
