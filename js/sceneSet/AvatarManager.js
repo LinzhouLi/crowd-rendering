@@ -102,6 +102,7 @@ class AvatarManager {
         instanceGroup.setRotation( param.index, rotation ) // 使Avatar面向前方
         instanceGroup.setPosition( param.index, param.position );
         instanceGroup.setScale( param.index, param.scale );
+        instanceGroup.setBodyScale( param.index, param.bodyScale );
 
     }
 
@@ -115,10 +116,16 @@ class AvatarManager {
             let param = {
                 position: this.seatPositions[i],
                 scale: [ 2.6, 2.6, 2.6 ],
-                animationSpeed: 1 + Math.random() * 0.4,
+                animationSpeed: 4 + Math.random() * 1,
                 LOD: -1,
                 textureType: [0, 0, 0, 0],
-                animationType: 0
+                animationType: 0,
+                bodyScale: [
+                    1,
+                    0.9 + 0.2 * Math.random(),
+                    0.9 + 0.2 * Math.random(),
+                    0.9 + 0.2 * Math.random()
+                ]
             }
             if (Math.random() < 0.5) { // 以0.5的概率生成男性
                 param.animationType = Math.floor( Math.random() * this.manager.config.male.animationCount );
@@ -165,13 +172,13 @@ class AvatarManager {
 
         // 资源路径设置
         const highModelPath = "assets/model/avatar/male_high.glb";
-        const highAnimationPath = "assets/animation/male_high_animations.json";
+        const highAnimationPath = "assets/animation/male_high_animations_long.json";
         const highTexturePath = "assets/texture/maleTextureHigh.jpg";
         const highVertexShader = "shader/highVertexShader.vert";
         const highFragmentShader = "shader/highFragmentShader.frag";
 
         const mediumModelPath = "assets/model/avatar/male_medium.glb";
-        const mediumAnimationPath = "assets/animation/male_medium_animations.json";
+        const mediumAnimationPath = "assets/animation/male_medium_animations_long.json";
         const mediumTexturePath = "assets/texture/maleTextureMedium.jpg";
         const mediumVertexShader = "shader/mediumVertexShader.vert";
         const mediumFragmentShader = "shader/mediumFragmentShader.frag";
@@ -185,11 +192,13 @@ class AvatarManager {
         const highModel = await this.loadGLB( highModelPath );
         const mediumModel = await this.loadGLB( mediumModelPath );
         const lowModel = await this.loadGLB( lowModelPath );
-
+        
         const highMesh = highModel.scene.children[0].children[1];
         const mediumMesh = mediumModel.scene.children[0].children[1];
         const lowMesh = lowModel.scene.children[0];
-
+        highMesh.pose();
+        this.obj.add(highMesh)
+        console.log(highMesh,highModel)
         // InstanceGroup
         // high
         const highInstanceGroup = new InstancedGroup(
@@ -260,13 +269,13 @@ class AvatarManager {
 
         // 资源路径设置
         const highModelPath = "assets/model/avatar/female_high.glb";
-        const highAnimationPath = "assets/animation/female_high_animations.json";
+        const highAnimationPath = "assets/animation/female_high_animations_long.json";
         const highTexturePath = "assets/texture/femaleTextureHigh.jpg";
         const highVertexShader = "shader/highVertexShader.vert";
         const highFragmentShader = "shader/highFragmentShader.frag";
 
         const mediumModelPath = "assets/model/avatar/female_medium.glb";
-        const mediumAnimationPath = "assets/animation/female_medium_animations.json";
+        const mediumAnimationPath = "assets/animation/female_medium_animations_long.json";
         const mediumTexturePath = "assets/texture/femaleTextureMedium.jpg";
         const mediumVertexShader = "shader/mediumVertexShader.vert";
         const mediumFragmentShader = "shader/mediumFragmentShader.frag";

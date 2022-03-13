@@ -8,7 +8,7 @@ uniform vec4 headUV;
 uniform vec4 handUV;
 uniform vec4 bottomUV;
 
-in vec4 outTextureIndex;
+in vec4 outTextureIndex; // 0:身体绝大部分 1:头部与手部 2:裤子 3:未使用
 in vec2 outUV;
 in vec3 outNormal;
 in vec3 outPosition;
@@ -27,7 +27,7 @@ struct Material {
     float gloss;
 };
 
-float getTextureIndex(float u, float v) {
+float getTextureIndex(float u, float v) { // 身体各部位贴图
 
     if (
         (u - headUV[0]) * (headUV[2] - u) > 0. &&
@@ -45,7 +45,7 @@ float getTextureIndex(float u, float v) {
 
 }
 
-vec4 computeTextureColor() {
+vec4 computeTextureColor() { // 贴图颜色
 
     float u = outUV.x;
     float v = outUV.y;
@@ -59,7 +59,7 @@ vec4 computeTextureColor() {
 
 }
 
-vec3 blinnPhong(
+vec3 blinnPhong( // 光照模型
     PointLight light,
     Material material,
     vec3 surfacePosition,
@@ -77,7 +77,7 @@ vec3 blinnPhong(
     // Diffuse
     vec3 diffuse = light.diffuseColor * material.textureColor * max(0., dot(lightDirection, normalDirection));
 
-    // Specular  (n·(v+l)/|v+l|)^g
+    // Specular  公式: (n·(v+l)/|v+l|)^g
     float specular = pow(max(0., dot(normalize(viewDirection + lightDirection), normalDirection)), material.gloss);
 
     return (
@@ -91,15 +91,15 @@ vec3 blinnPhong(
 void main() {
 
     PointLight light = PointLight(
-        vec3(0., 40.97, 0.),
-        vec3(1., 1., 1.),
-        vec3(1., 1., 1.)
+        vec3(0., 40.97, 0.), // 点光源位置
+        vec3(1., 1., 1.), // 漫反射颜色
+        vec3(1., 1., 1.) // 高光颜色
     );
 
     Material material = Material(
         computeTextureColor().rgb,
-        0.6, 0.3, 0.2,
-        16.
+        0.6, 0.3, 0.2, // 三种光照比例 环境光:漫反射:高光
+        16. // 粗糙度  其值越大, 高光区域越小
     );
     
 

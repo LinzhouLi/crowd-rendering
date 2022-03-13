@@ -21,11 +21,17 @@ out vec3 outNormal;
 out vec4 outTextureIndex;
 out vec3 outPosition;
 
-vec3 getAnimationItem(float index) {
+vec3 getAnimationItem(float index) { // 从texture中提取矩阵元素
 
+    // vec3 data = texture(
+    //     animationTexture, 
+    //     vec2( 0.5, (0.5 + index) / animationTextureLength )
+    // ).xyz;
+    float v = floor(index / animationTextureLength);
+    float u = index - v * animationTextureLength;
     vec3 data = texture(
         animationTexture, 
-        vec2( 0.5, (0.5 + index) / animationTextureLength )
+        vec2( (0.5 + u) / animationTextureLength, (0.5 + v) / animationTextureLength )
     ).xyz;
     return data;
 
