@@ -9,7 +9,7 @@
 		</style>
 	</head>
 	<body style="margin: 0">
-		<script src="js/lib/GPUjs/gpu-browser.min.js"></script>
+		<!-- <script src="js/lib/GPUjs/gpu-browser.min.js"></script> -->
 		<script src="js/lib/threeJS/three.js"></script>
 		<script src="js/lib/threeJS/GLTFLoader.js"></script>
 
@@ -54,12 +54,7 @@
 			main.render();
 			window.camera = main.camera;
 			//document.body.appendChild( VRButton.createButton( main.renderer ) );
-			//main.renderer.xr.enabled = true;
-
-			var myVideoManager = new VideoManager();
-
-			var myRoomManager = new RoomManager(myVideoManager, main.camera);
-			main.scene.add(myRoomManager.room);  
+			//main.renderer.xr.enabled = true;  
 
 			new PlayerControl(main.camera); //.cullingTest(main.scene)
 
@@ -84,13 +79,11 @@
 			net.scale.set(0.03,0.03,0.04)
 			net.rotation.set(0,Math.PI/2,0)
 			main.scene.add(net);
-			//new ParamMeasure(net,0)
 
-			const light = new THREE.PointLight( 0xffffff, 1 );
-			light.castShadow = true;
-			light.position.set(0,40.97,0)
-			light.rotation.set(0,Math.PI/2,0)
-			main.scene.add(light)
+			var myVideoManager = new VideoManager();
+
+			var myRoomManager = new RoomManager(myVideoManager, main.camera);
+			main.scene.add(myRoomManager.room);
 
 			//开始自动漫游路径
 			var mydata = [//自动漫游路径//x         y      z      angel       time  展板编号  展板初始旋转(单位是90度)
