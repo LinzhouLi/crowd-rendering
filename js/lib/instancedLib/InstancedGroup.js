@@ -124,6 +124,7 @@ class InstancedGroup {
         uniforms.animationTextureLength = { value: animationTextureLength };
         
         let scope = this;
+        
         updateAnimation();
 
         function updateAnimation() {
