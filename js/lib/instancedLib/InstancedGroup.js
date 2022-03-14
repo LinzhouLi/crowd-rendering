@@ -9,7 +9,7 @@ class InstancedGroup {
         camera
     ) {
 
-        this.mesh;
+        // this.mesh;
         this.instanceCount = instanceCount;
         this.originMesh = originMesh;
         this.animationUrl = animationUrl;
@@ -87,13 +87,20 @@ class InstancedGroup {
         material.vertexShader = vertexShader;
         material.fragmentShader = fragmentShader;
 
-        let uniforms = this.ifAnimated ? await this.initAnimation() : { };
-        uniforms.textureCount = { value: this.textureCount };
-        uniforms.textureData = { value: textureData };
-        if( this.ifAnimated ) {
-            uniforms.headUV = { value: new THREE.Vector4(...this.body.head) };
-            uniforms.handUV = { value: new THREE.Vector4(...this.body.hand) };
-            uniforms.bottomUV = { value: new THREE.Vector4(...this.body.bottom) };
+        let uniforms = {
+            textureCount: { value: this.textureCount },
+            textureData: { value: textureData },
+            headUV: { value: new THREE.Vector4(...this.body.head) },
+            handUV: { value: new THREE.Vector4(...this.body.hand) },
+            bottomUV: { value: new THREE.Vector4(...this.body.bottom) }
+        };
+        if (this.ifAnimated) {
+            uniforms.time = { value: 0 };
+            uniforms.boneCount = { value: 0 };
+            uniforms.animationFrameCount = { value: 0 };
+            uniforms.animationTexture = { value: new THREE.DataTexture(new Float32Array([0,0,0]), 1, 1, THREE.RGBFormat, THREE.FloatType) };
+            uniforms.animationTextureLength = { value: 0 };
+            this.initAnimation(uniforms); // 异步加载动画数据
         }
         material.uniforms = uniforms;
 
@@ -101,25 +108,23 @@ class InstancedGroup {
 
     }
 
-    async initAnimation() {
+    async initAnimation(uniforms) {
 
         const animations = await this.loadJSON(this.animationUrl);
         const boneCount = this.originMesh.skeleton.bones.length;
         const animationData = animations.animation.flat();
         const animationDataLength = animations.config.reduce((prev, cur) => prev + cur, 0); // sum
         const animationTextureLength = THREE.MathUtils.ceilPowerOfTwo( Math.sqrt(animationDataLength / 3) );
-        let uniforms = {
-            time: { value: 0 },
-            boneCount: { value: boneCount },
-            animationFrameCount: { value: animations.config[0] / boneCount / 12 },
-            animationTexture: { value: this.array2Texture(animationData, animationTextureLength) }, // 将动画数据保存为图片Texture格式
-            animationTextureLength: { value: animationTextureLength }
-        };
+
+        uniforms.animationTexture.value.dispose();
+        uniforms.time = { value: 0 };
+        uniforms.boneCount = { value: boneCount };
+        uniforms.animationFrameCount = { value: animations.config[0] / boneCount / 12 };
+        uniforms.animationTexture = { value: this.array2Texture(animationData, animationTextureLength) }; // 将动画数据保存为图片Texture格式
+        uniforms.animationTextureLength = { value: animationTextureLength };
         
         let scope = this;
         updateAnimation();
-
-        return uniforms;
 
         function updateAnimation() {
             let time = Math.floor(10 * scope.clock.getElapsedTime());
@@ -201,8 +206,8 @@ class InstancedGroup {
 
         let data = new Float32Array(length * length * 3); // RGB:3 RGBA:4
         data.set(array);
-        const texture = new THREE.DataTexture(data, length, length, THREE.RGBFormat, THREE.FloatType);
-        console.log(texture)
+        let texture = new THREE.DataTexture(data, length, length, THREE.RGBFormat, THREE.FloatType);
+        texture.needsUpdate = true;
         return texture;
 
     }

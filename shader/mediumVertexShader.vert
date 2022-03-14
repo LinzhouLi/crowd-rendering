@@ -23,10 +23,6 @@ out vec3 outPosition;
 
 vec3 getAnimationItem(float index) { // 从texture中提取矩阵元素
 
-    // vec3 data = texture(
-    //     animationTexture, 
-    //     vec2( 0.5, (0.5 + index) / animationTextureLength )
-    // ).xyz;
     float v = floor(index / animationTextureLength);
     float u = index - v * animationTextureLength;
     vec3 data = texture(
@@ -38,6 +34,15 @@ vec3 getAnimationItem(float index) { // 从texture中提取矩阵元素
 }
 
 mat4 computeAnimationMatrix(float boneIndex) {
+
+    if ( animationTextureLength < 0.5) { // 动画未加载
+        return mat4(
+            1., 0., 0., 0.,
+            0., 1., 0., 0.,
+            0., 0., 1., 0.,
+            0., 0., 0., 1.
+        );
+    }
 
     float frameIndex = float(int(time * speed) % int(animationFrameCount));
     float startPos = 4. * (boneCount * (animationIndex * animationFrameCount + frameIndex) + boneIndex);

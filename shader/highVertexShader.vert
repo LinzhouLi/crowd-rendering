@@ -47,10 +47,6 @@ float computeBodyScale() {
 
 vec3 getAnimationItem(float index) { // 从texture中提取矩阵元素
 
-    // vec3 data = texture(
-    //     animationTexture, 
-    //     vec2( 0.5, (0.5 + index) / animationTextureLength )
-    // ).xyz;
     float v = floor(index / animationTextureLength);
     float u = index - v * animationTextureLength;
     vec3 data = texture(
@@ -76,6 +72,8 @@ mat4 computeAnimationMatrix(float boneIndex) { // 计算一个骨骼的变换矩
 
 vec3 vertexBlending(vec3 position) { // 动画形变, 计算4个骨骼的影响
 
+    if ( animationTextureLength < 0.5) return position; // 动画未加载
+
     vec4 temp = vec4(position, 1.);
     vec4 result = vec4(0., 0., 0., 0.);
     result += skinWeight[0] * computeAnimationMatrix(skinIndex[0]) * temp;
@@ -98,7 +96,7 @@ void main() {
         vec4(mcol3, 1.)
     );
     
-    float scale = computeBodyScale();
+    // float scale = computeBodyScale(); // 身体形变,暂不使用
     vec4 worldPosition = transformMatrix * vec4(vertexBlending(position), 1.); // 世界坐标下的顶点位置
     vec4 normal = transformMatrix * vec4(vertexBlending(normal), 0.); // 世界坐标下的顶点向量
     outNormal = normal.xyz;
