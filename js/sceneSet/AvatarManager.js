@@ -161,9 +161,9 @@ class AvatarManager {
         this.createHost();
         this.initAvatarParams();
         const filePath = this.initFilePath();
-        await this.createLowAvatar(filePath);
-        await this.createMediumAvatar(filePath);
-        await this.createHighAvatar(filePath);
+        this.createLowAvatar(filePath);
+        this.createMediumAvatar(filePath);
+        this.createHighAvatar(filePath);
 
     }
 
