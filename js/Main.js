@@ -1,6 +1,6 @@
-import { RoomManager } from './sceneSet/RoomManager.js';
-import { AvatarManager } from './sceneSet/AvatarManager.js';
-import { SeatManager } from './sceneSet/SeatManager.js';
+import { RoomManager } from './room/RoomManager.js';
+import { AvatarManager } from './avatar/AvatarManager.js';
+import { SeatManager } from './avatar/SeatManager.js';
 
 class Main {
 

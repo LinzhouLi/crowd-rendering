@@ -9,15 +9,9 @@
 		</style>
 	</head>
 	<body style="margin: 0">
-		<!-- <script src="js/lib/GPUjs/gpu-browser.min.js"></script> -->
 		<script src="js/lib/threeJS/three.js"></script>
 		<script src="js/lib/threeJS/GLTFLoader.js"></script>
-
-		<!-- <script src="js/lib/pmLib/MyPMLoader.js"></script> -->
-		<script src="js/VideoManager.js"></script>
-
-		<!-- <script src="js/ParamMeasure.js"></script> -->
-		<!-- <script src="js/Pack.js"></script> -->
+		<script src="js/room/VideoManager.js"></script>
 		<div id="cheat">
 			<img 
 				id="bg" 
@@ -28,18 +22,16 @@
 
 		<script  type="module">
 			import { Main } from './js/Main.js';
-			// import { PreviewManager } from './js/playerControl/PreviewManager.js';
-			import { Net } from './js/simulate/Net.js';
+			// import { PreviewManager } from './js/lib/playerControl/PreviewManager.js';
+			import { Net } from './js/room/Net.js';
 			import { Blur } from './js/Blur.js';
-			import { PlayerControl } from './js/playerControl/PlayerControl.js';
+			import { PlayerControl } from './js/lib/playerControl/PlayerControl.js';
 			new Blur(); // 背景
 
 			let main = new Main();
 			new PlayerControl(main.camera);
 			main.render();
 			main.initScene();
-			// document.body.appendChild( VRButton.createButton( main.renderer ) );
-			// main.renderer.xr.enabled = true; 
 
 			var net=new Net().object;
 			net.position.set(170,17,-59)
