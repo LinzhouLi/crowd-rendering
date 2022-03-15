@@ -41,7 +41,8 @@ class Main {
         await this.roomManager.loadFirstResource(); // 会议室主体
         await this.avatarManager.createMediumAvatar(); // 人物中模
         await this.avatarManager.createHighAvatar(); // 人物高模
-        await this.roomManager.loadOtherResource() // 会议室其他
+        await this.roomManager.loadNextResource(); // 会议室其他
+        await this.roomManager.loadOtherResource(); // 会议室其他
 
     }
 

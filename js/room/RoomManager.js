@@ -123,6 +123,10 @@ class RoomManager{
         this.roomScene = gltf.scene;
         this.room.add(this.roomScene);
 
+    }
+
+    async loadNextResource() {
+
         const json = await this.loadJSON(`${this.url}test.json`);
         const list = json.list;
         const mapsIndex = json.mapsIndex;
