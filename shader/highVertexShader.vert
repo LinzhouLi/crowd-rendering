@@ -47,10 +47,6 @@ float computeBodyScale() {
 
 vec3 getAnimationItem(float index) { // 从texture中提取矩阵元素
 
-    // vec3 data = texture(
-    //     animationTexture, 
-    //     vec2( 0.5, (0.5 + index) / animationTextureLength )
-    // ).xyz;
     float v = floor(index / animationTextureLength);
     float u = index - v * animationTextureLength;
     vec3 data = texture(
@@ -61,9 +57,8 @@ vec3 getAnimationItem(float index) { // 从texture中提取矩阵元素
 
 }
 
-mat4 computeAnimationMatrix(float boneIndex) { // 计算一个骨骼的变换矩阵
+mat4 computeAnimationMatrix(float boneIndex, float frameIndex) { // 计算一个骨骼的变换矩阵
 
-    float frameIndex = float(int(time * speed) % int(animationFrameCount));
     float startPos = 4. * (boneCount * (animationIndex * animationFrameCount + frameIndex) + boneIndex);
     return mat4(
         vec4(getAnimationItem(startPos + 0.), 0.),
@@ -74,15 +69,32 @@ mat4 computeAnimationMatrix(float boneIndex) { // 计算一个骨骼的变换矩
     
 }
 
-vec3 vertexBlending(vec3 position) { // 动画形变, 计算4个骨骼的影响
+vec3 vertexBlending(vec3 position, float frameIndex) { // 动画形变, 计算4个骨骼的影响
+
+    if ( animationTextureLength < 0.5) return position; // 动画未加载
 
     vec4 temp = vec4(position, 1.);
     vec4 result = vec4(0., 0., 0., 0.);
-    result += skinWeight[0] * computeAnimationMatrix(skinIndex[0]) * temp;
-    result += skinWeight[1] * computeAnimationMatrix(skinIndex[1]) * temp;
-    result += skinWeight[2] * computeAnimationMatrix(skinIndex[2]) * temp;
-    result += skinWeight[3] * computeAnimationMatrix(skinIndex[3]) * temp;
+    result += skinWeight[0] * computeAnimationMatrix(skinIndex[0], frameIndex) * temp;
+    result += skinWeight[1] * computeAnimationMatrix(skinIndex[1], frameIndex) * temp;
+    result += skinWeight[2] * computeAnimationMatrix(skinIndex[2], frameIndex) * temp;
+    result += skinWeight[3] * computeAnimationMatrix(skinIndex[3], frameIndex) * temp;
     return result.xyz;
+
+}
+
+vec3 frameInterpolation(vec3 position) { // 点坐标插值, 考虑优化:变换矩阵插值
+
+    float m = floor(time * speed / animationFrameCount);
+    float temp = time * speed - m * animationFrameCount;
+    float frameIndex1 = floor(temp);
+    float weight = temp - frameIndex1; // 插值权重
+    float frameIndex2 = float(int(frameIndex1 + 1.) % int(animationFrameCount));
+
+    vec3 p1 = vertexBlending(position, frameIndex1);
+    vec3 p2 = vertexBlending(position, frameIndex2);
+
+    return (1. - weight) * p1 + weight * p2;
 
 }
 
@@ -98,9 +110,9 @@ void main() {
         vec4(mcol3, 1.)
     );
     
-    float scale = computeBodyScale();
-    vec4 worldPosition = transformMatrix * vec4(vertexBlending(position), 1.); // 世界坐标下的顶点位置
-    vec4 normal = transformMatrix * vec4(vertexBlending(normal), 0.); // 世界坐标下的顶点向量
+    // float scale = computeBodyScale(); // 身体形变,暂不使用
+    vec4 worldPosition = transformMatrix * vec4(frameInterpolation(position), 1.); // 世界坐标下的顶点位置
+    vec4 normal = transformMatrix * vec4(frameInterpolation(normal), 0.); // 世界坐标下的顶点向量
     outNormal = normal.xyz;
     outPosition = worldPosition.xyz;
 

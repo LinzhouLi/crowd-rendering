@@ -12,7 +12,7 @@ class AvatarManager {
 
         this.camera = camera;
         this.lodController = new LODController( seatPositions, camera );
-        this.created = false;
+        this.lodFinished = [false, false, false];
 
         this.manager = {
             params: [],
@@ -20,17 +20,45 @@ class AvatarManager {
                 male: { // 男性模型
                     maxCount: [ 60, 500, 3500 ], // 每级LOD的instance数量
                     textureCount: 17, // 材质贴图数量
-                    animationCount: 3, // 动作数量
+                    animationCount: 5, // 动作数量
+                    body: { // body
+                        head: [
+                            0.5322, 0.70654296875,
+                            1, 1
+                        ],
+                        hand: [
+                            0.20703125, 0.41259765625,
+                            0.7275390625, 0.57958984375
+                        ],
+                        bottom: [
+                            0, 0.6, 
+                            0.5322, 1
+                        ]
+                    },
                 },
                 female: {
                     maxCount: [ 60, 500, 3500 ],
                     textureCount: 18,
-                    animationCount: 3,
+                    animationCount: 5,
+                    body: { // body
+                        head: [
+                            0.5322, 0.70654296875,
+                            1, 1
+                        ],
+                        hand: [
+                            0.20703125, 0.41259765625,
+                            0.7275390625, 0.57958984375
+                        ],
+                        bottom: [
+                            0, 0.6, 
+                            0.5322, 1
+                        ]
+                    },
                 }
             },
             instanceGroup: {
-                male: [],
-                female: []
+                male: new Array(3), // 3级LOD
+                female: new Array(3)
             }
         };
         
@@ -44,69 +72,45 @@ class AvatarManager {
 
     }
 
-    async init() {
+    initFilePath() {
 
-        this.createHost();
-        this.initAvatarParams();
-        await this.createMaleAvatar();
-        await this.createFemaleAvatar();
-        this.created = true;
+        return {
+            shader: {
+                highVertexShader: "shader/highVertexShader.vert",
+                highFragmentShader: "shader/highFragmentShader.frag",
+                mediumVertexShader: "shader/mediumVertexShader.vert",
+                mediumFragmentShader: "shader/mediumFragmentShader.frag",
+                lowVertexShader: "shader/lowVertexShader.vert",
+                lowFragmentShader: "shader/lowFragmentShader.frag",
+            },
 
-    }
+            male: {
+                // 资源路径设置
+                highModelPath: "assets/model/avatar/male_high.glb",
+                highAnimationPath: "assets/animation/male_high_animations_long.json",
+                highTexturePath: "assets/texture/maleTextureHigh.jpg",
 
-    updateLOD() {
-        
-        let lod = this.lodController.update();
-        let lodCount = {
-            male: [0, 0, 0],
-            female: [0, 0, 0]
-        };
-        for (let i = 0; i < lod.length; i++) {
-            if (lod[i] != -1) {
-                
-                let param = this.manager.params[i];
-                param.LOD = lod[i];
-                param.index = lodCount[param.sex][lod[i]]++;
-                this.setInstanceParam( param );
-                
+                mediumModelPath: "assets/model/avatar/male_medium.glb",
+                mediumAnimationPath: "assets/animation/male_medium_animations_long.json",
+                mediumTexturePath: "assets/texture/maleTextureMedium.jpg",
+
+                lowModelPath: "assets/model/avatar/male_low.glb",
+                lowTexturePath: "assets/texture/maleTextureLow.jpg",
+            },
+
+            female: {
+                highModelPath: "assets/model/avatar/female_high.glb",
+                highAnimationPath: "assets/animation/female_high_animations_long.json",
+                highTexturePath: "assets/texture/femaleTextureHigh.jpg",
+
+                mediumModelPath: "assets/model/avatar/female_medium.glb",
+                mediumAnimationPath: "assets/animation/female_medium_animations_long.json",
+                mediumTexturePath: "assets/texture/femaleTextureMedium.jpg",
+
+                lowModelPath: "assets/model/avatar/female_low.glb",
+                lowTexturePath: "assets/texture/femaleTextureLow.jpg",
             }
         }
-        
-        this.manager.instanceGroup.male.forEach( (group, i) => {
-            if (lodCount.male[i] > this.manager.config.male.maxCount[i])
-                console.log(`Male LOD:${i}的instance数量设置不足!`); // instances个数不足
-            group.mesh.count = lodCount.male[i];
-            group.update();
-        } );
-        this.manager.instanceGroup.female.forEach( (group, i) => {
-            if (lodCount.female[i] > this.manager.config.female.maxCount[i])
-                console.log(`Female LOD:${i}的instance数量设置不足!`); // instances个数不足
-            group.mesh.count = lodCount.female[i];
-            group.update();
-        } );
-
-    }
-
-    setInstanceParam( param ) {
-
-        if ( param.LOD == -1 ) return; // LOD为-1表示在视锥外
-
-        // 人物旋转参数设置
-        let rotation = [Math.PI / 2, Math.PI / 2, 3 * Math.PI / 2];
-        if ( param.LOD == 2 ) rotation = [Math.PI / 2, 0, 3 * Math.PI / 2];
-
-        const instanceGroup = this.manager.instanceGroup[param.sex][param.LOD];
-        instanceGroup.setAnimation( param.index, param.animationType );
-        instanceGroup.setSpeed( param.index, param.animationSpeed );
-        instanceGroup.setTexture( param.index, param.textureType );
-        instanceGroup.setRotation( param.index, rotation ) // 使Avatar面向前方
-        instanceGroup.setPosition( param.index, param.position );
-        instanceGroup.setScale( param.index, param.scale );
-        instanceGroup.setBodyScale( param.index, param.bodyScale );
-
-    }
-
-    createHost() {
 
     }
 
@@ -152,195 +156,217 @@ class AvatarManager {
 
     }
 
-    async createMaleAvatar() {
+    async init() {
 
-        // body
-        const body = {
-            head: [
-                0.5322, 0.70654296875,
-                1, 1
-            ],
-            hand: [
-                0.20703125, 0.41259765625,
-                0.7275390625, 0.57958984375
-            ],
-            bottom: [
-                0, 0.6, 
-                0.5322, 1
-            ]
-        };
-
-        // 资源路径设置
-        const highModelPath = "assets/model/avatar/male_high.glb";
-        const highAnimationPath = "assets/animation/male_high_animations_long.json";
-        const highTexturePath = "assets/texture/maleTextureHigh.jpg";
-        const highVertexShader = "shader/highVertexShader.vert";
-        const highFragmentShader = "shader/highFragmentShader.frag";
-
-        const mediumModelPath = "assets/model/avatar/male_medium.glb";
-        const mediumAnimationPath = "assets/animation/male_medium_animations_long.json";
-        const mediumTexturePath = "assets/texture/maleTextureMedium.jpg";
-        const mediumVertexShader = "shader/mediumVertexShader.vert";
-        const mediumFragmentShader = "shader/mediumFragmentShader.frag";
-
-        const lowModelPath = "assets/model/avatar/male_low.glb";
-        const lowTexturePath = "assets/texture/maleTextureLow.jpg";
-        const lowVertexShader = "shader/lowVertexShader.vert";
-        const lowFragmentShader = "shader/lowFragmentShader.frag";
-
-        // load
-        const highModel = await this.loadGLB( highModelPath );
-        const mediumModel = await this.loadGLB( mediumModelPath );
-        const lowModel = await this.loadGLB( lowModelPath );
-        
-        const highMesh = highModel.scene.children[0].children[1];
-        const mediumMesh = mediumModel.scene.children[0].children[1];
-        const lowMesh = lowModel.scene.children[0];
-        highMesh.pose();
-        this.obj.add(highMesh)
-        console.log(highMesh,highModel)
-        // InstanceGroup
-        // high
-        const highInstanceGroup = new InstancedGroup(
-            this.manager.config.male.maxCount[0],
-            highMesh,
-            highAnimationPath,
-            highTexturePath,
-            this.manager.config.male.textureCount,
-            this.camera
-        );
-        highInstanceGroup.body = body;
-        highInstanceGroup.vertURL = highVertexShader;
-        highInstanceGroup.fragURL = highFragmentShader;
-        this.manager.instanceGroup.male.push( highInstanceGroup );
-        const highInstanceMesh = await highInstanceGroup.init();
-        this.obj.add( highInstanceMesh );
-
-        // medium
-        const mediumInstanceGroup = new InstancedGroup(
-            this.manager.config.male.maxCount[1],
-            mediumMesh,
-            mediumAnimationPath,
-            mediumTexturePath,
-            this.manager.config.male.textureCount,
-            this.camera
-        );
-        mediumInstanceGroup.body = body;
-        mediumInstanceGroup.vertURL = mediumVertexShader;
-        mediumInstanceGroup.fragURL = mediumFragmentShader;
-        this.manager.instanceGroup.male.push( mediumInstanceGroup );
-        const mediumInstanceMesh = await mediumInstanceGroup.init();
-        this.obj.add( mediumInstanceMesh );
-
-        // low
-        const lowInstanceGroup = new InstancedGroup(
-            this.manager.config.male.maxCount[2],
-            lowMesh,
-            false,
-            lowTexturePath,
-            this.manager.config.male.textureCount,
-            this.camera
-        );
-        lowInstanceGroup.vertURL = lowVertexShader;
-        lowInstanceGroup.fragURL = lowFragmentShader;
-        this.manager.instanceGroup.male.push( lowInstanceGroup );
-        const lowInstanceMesh = await lowInstanceGroup.init();
-        this.obj.add( lowInstanceMesh );
+        this.createHost();
+        this.initAvatarParams();
+        console.log(this.computeDisp());
+        const filePath = this.initFilePath();
+        await this.createLowAvatar(filePath);
+        await this.createMediumAvatar(filePath);
+        await this.createHighAvatar(filePath);
 
     }
 
-    async createFemaleAvatar() {
+    computeDisp() {
 
-        // body
-        const body = {
-            head: [
-                0.5322, 0.70654296875,
-                1, 1
-            ],
-            hand: [
-                0.20703125, 0.41259765625,
-                0.7275390625, 0.57958984375
-            ],
-            bottom: [
-                0, 0.6, 
-                0.5322, 1
-            ]
+        console.log(this.manager.params);
+        return 1;
+
+    }
+
+    updateLOD() {
+        
+        if ( !this.lodFinished[2] ) return;
+
+        const minFinishedLOD = this.lodFinished[1] ? (this.lodFinished[0] ? 0 : 1) : 2;
+        const lod = this.lodController.update();
+        let lodCount = {
+            male: [0, 0, 0],
+            female: [0, 0, 0]
         };
+        for (let i = 0; i < lod.length; i++) {
+            if (lod[i] != -1) {
+                
+                let param = this.manager.params[i];
+                param.LOD = Math.max(lod[i], minFinishedLOD);
+                param.index = lodCount[param.sex][param.LOD]++;
+                this.setInstanceParam( param );
+                
+            }
+        }
+        
+        this.manager.instanceGroup.male.forEach( (group, i) => {
+            if (lodCount.male[i] > this.manager.config.male.maxCount[i])
+                console.warn(`Male LOD:${i}的instance数量设置不足!`); // instances个数不足
+            group.mesh.count = lodCount.male[i];
+            group.update();
+        } );
+        this.manager.instanceGroup.female.forEach( (group, i) => {
+            if (lodCount.female[i] > this.manager.config.female.maxCount[i])
+                console.warn(`Female LOD:${i}的instance数量设置不足!`); // instances个数不足
+            group.mesh.count = lodCount.female[i];
+            group.update();
+        } );
 
-        // 资源路径设置
-        const highModelPath = "assets/model/avatar/female_high.glb";
-        const highAnimationPath = "assets/animation/female_high_animations_long.json";
-        const highTexturePath = "assets/texture/femaleTextureHigh.jpg";
-        const highVertexShader = "shader/highVertexShader.vert";
-        const highFragmentShader = "shader/highFragmentShader.frag";
+    }
 
-        const mediumModelPath = "assets/model/avatar/female_medium.glb";
-        const mediumAnimationPath = "assets/animation/female_medium_animations_long.json";
-        const mediumTexturePath = "assets/texture/femaleTextureMedium.jpg";
-        const mediumVertexShader = "shader/mediumVertexShader.vert";
-        const mediumFragmentShader = "shader/mediumFragmentShader.frag";
+    setInstanceParam( param ) {
 
-        const lowModelPath = "assets/model/avatar/female_low.glb";
-        const lowTexturePath = "assets/texture/femaleTextureLow.jpg";
-        const lowVertexShader = "shader/lowVertexShader.vert";
-        const lowFragmentShader = "shader/lowFragmentShader.frag";
+        if ( param.LOD == -1 ) return; // LOD为-1表示在视锥外
 
-        // load
-        const highModel = await this.loadGLB( highModelPath );
-        const mediumModel = await this.loadGLB( mediumModelPath );
-        const lowModel = await this.loadGLB( lowModelPath );
+        // 人物旋转参数设置
+        let rotation = [Math.PI / 2, Math.PI / 2, 3 * Math.PI / 2];
+        if ( param.LOD == 2 ) rotation = [Math.PI / 2, 0, 3 * Math.PI / 2];
 
-        const highMesh = highModel.scene.children[0].children[1].children[0];
-        const mediumMesh = mediumModel.scene.children[0].children[1].children[0];
-        const lowMesh = lowModel.scene.children[0];
+        const instanceGroup = this.manager.instanceGroup[param.sex][param.LOD];
+        instanceGroup.setAnimation( param.index, param.animationType );
+        instanceGroup.setSpeed( param.index, param.animationSpeed );
+        instanceGroup.setTexture( param.index, param.textureType );
+        instanceGroup.setRotation( param.index, rotation ) // 使Avatar面向前方
+        instanceGroup.setPosition( param.index, param.position );
+        instanceGroup.setScale( param.index, param.scale );
+        instanceGroup.setBodyScale( param.index, param.bodyScale );
 
-        // InstanceGroup
-        // high
-        const highInstanceGroup = new InstancedGroup(
-            this.manager.config.female.maxCount[0],
-            highMesh,
-            highAnimationPath,
-            highTexturePath,
-            this.manager.config.female.textureCount,
-            this.camera
-        );
-        highInstanceGroup.body = body;
-        highInstanceGroup.vertURL = highVertexShader;
-        highInstanceGroup.fragURL = highFragmentShader;
-        this.manager.instanceGroup.female.push( highInstanceGroup );
-        const highInstanceMesh = await highInstanceGroup.init();
-        this.obj.add( highInstanceMesh );
+    }
 
-        // medium
-        const mediumInstanceGroup = new InstancedGroup(
-            this.manager.config.female.maxCount[1],
-            mediumMesh,
-            mediumAnimationPath,
-            mediumTexturePath,
-            this.manager.config.female.textureCount,
-            this.camera
-        );
-        mediumInstanceGroup.body = body;
-        mediumInstanceGroup.vertURL = mediumVertexShader;
-        mediumInstanceGroup.fragURL = mediumFragmentShader;
-        this.manager.instanceGroup.female.push( mediumInstanceGroup );
-        const mediumInstanceMesh = await mediumInstanceGroup.init();
-        this.obj.add( mediumInstanceMesh );
+    createHost() {
 
-        // low
-        const lowInstanceGroup = new InstancedGroup(
-            this.manager.config.female.maxCount[2],
-            lowMesh,
+    }
+
+    async createLowAvatar(path) {
+
+        // male
+        const maleModel = await this.loadGLB( path.male.lowModelPath );
+        const maleMesh = maleModel.scene.children[0];
+
+        const maleInstanceGroup = new InstancedGroup(
+            this.manager.config.male.maxCount[2],
+            maleMesh,
             false,
-            lowTexturePath,
+            path.male.lowTexturePath,
+            this.manager.config.male.textureCount,
+            this.camera
+        );
+        maleInstanceGroup.vertURL = path.shader.lowVertexShader;
+        maleInstanceGroup.fragURL = path.shader.lowFragmentShader;
+
+        const maleInstanceMesh = await maleInstanceGroup.init();
+        this.manager.instanceGroup.male[2] = maleInstanceGroup;
+        this.obj.add( maleInstanceMesh );
+
+        // female
+        const femaleModel = await this.loadGLB( path.female.lowModelPath );
+        const femaleMesh = femaleModel.scene.children[0];
+
+        const femaleInstanceGroup = new InstancedGroup(
+            this.manager.config.female.maxCount[2],
+            femaleMesh,
+            false,
+            path.female.lowTexturePath,
             this.manager.config.female.textureCount,
             this.camera
         );
-        lowInstanceGroup.vertURL = lowVertexShader;
-        lowInstanceGroup.fragURL = lowFragmentShader;
-        this.manager.instanceGroup.female.push( lowInstanceGroup );
-        const lowInstanceMesh = await lowInstanceGroup.init();
-        this.obj.add( lowInstanceMesh );
+        femaleInstanceGroup.vertURL = path.shader.lowVertexShader;
+        femaleInstanceGroup.fragURL = path.shader.lowFragmentShader;
+
+        const femaleInstanceMesh = await femaleInstanceGroup.init();
+        this.manager.instanceGroup.female[2] = femaleInstanceGroup;
+        this.obj.add( femaleInstanceMesh );
+
+        this.lodFinished[2] = true;
+
+    }
+
+    async createMediumAvatar(path) {
+
+        // male
+        const maleModel = await this.loadGLB( path.male.mediumModelPath );
+        const maleMesh = maleModel.scene.children[0].children[1];
+
+        const maleInstanceGroup = new InstancedGroup(
+            this.manager.config.male.maxCount[1],
+            maleMesh,
+            path.male.mediumAnimationPath,
+            path.male.mediumTexturePath,
+            this.manager.config.male.textureCount,
+            this.camera
+        );
+        maleInstanceGroup.body = this.manager.config.male.body;
+        maleInstanceGroup.vertURL = path.shader.mediumVertexShader;
+        maleInstanceGroup.fragURL = path.shader.mediumFragmentShader;
+
+        const maleInstanceMesh = await maleInstanceGroup.init();
+        this.manager.instanceGroup.male[1] = maleInstanceGroup;
+        this.obj.add( maleInstanceMesh );
+
+        // female
+        const femaleModel = await this.loadGLB( path.female.mediumModelPath );
+        const femaleMesh = femaleModel.scene.children[0].children[1].children[0];
+
+        const femaleInstanceGroup = new InstancedGroup(
+            this.manager.config.female.maxCount[1],
+            femaleMesh,
+            path.female.mediumAnimationPath,
+            path.female.mediumTexturePath,
+            this.manager.config.female.textureCount,
+            this.camera
+        );
+        femaleInstanceGroup.body = this.manager.config.female.body;
+        femaleInstanceGroup.vertURL = path.shader.mediumVertexShader;
+        femaleInstanceGroup.fragURL = path.shader.mediumFragmentShader;
+
+        const femaleInstanceMesh = await femaleInstanceGroup.init();
+        this.manager.instanceGroup.female[1] = femaleInstanceGroup;
+        this.obj.add( femaleInstanceMesh );
+
+        this.lodFinished[1] = true;
+
+    }
+
+    async createHighAvatar(path) {
+
+        // male
+        const maleModel = await this.loadGLB( path.male.highModelPath );
+        const maleMesh = maleModel.scene.children[0].children[1];
+
+        const maleInstanceGroup = new InstancedGroup(
+            this.manager.config.male.maxCount[0],
+            maleMesh,
+            path.male.highAnimationPath,
+            path.male.highTexturePath,
+            this.manager.config.male.textureCount,
+            this.camera
+        );
+        maleInstanceGroup.body = this.manager.config.male.body;
+        maleInstanceGroup.vertURL = path.shader.highVertexShader;
+        maleInstanceGroup.fragURL = path.shader.highFragmentShader;
+
+        const maleInstanceMesh = await maleInstanceGroup.init();
+        this.manager.instanceGroup.male[0] = maleInstanceGroup;
+        this.obj.add( maleInstanceMesh );
+
+        // female
+        const femaleModel = await this.loadGLB( path.female.highModelPath );
+        const femaleMesh = femaleModel.scene.children[0].children[1].children[0];
+
+        const femaleInstanceGroup = new InstancedGroup(
+            this.manager.config.female.maxCount[0],
+            femaleMesh,
+            path.female.highAnimationPath,
+            path.female.highTexturePath,
+            this.manager.config.female.textureCount,
+            this.camera
+        );
+        femaleInstanceGroup.body = this.manager.config.female.body;
+        femaleInstanceGroup.vertURL = path.shader.highVertexShader;
+        femaleInstanceGroup.fragURL = path.shader.highFragmentShader;
+
+        const femaleInstanceMesh = await femaleInstanceGroup.init();
+        this.manager.instanceGroup.female[0] = femaleInstanceGroup;
+        this.obj.add( femaleInstanceMesh );
+
+        this.lodFinished[0] = true;
 
     }
 
