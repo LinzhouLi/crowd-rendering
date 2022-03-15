@@ -1,3 +1,7 @@
+import { RoomManager } from './sceneSet/RoomManager.js';
+import { AvatarManager } from './sceneSet/AvatarManager.js';
+import { SeatManager } from './sceneSet/SeatManager.js';
+
 class Main {
 
     constructor() {
@@ -10,9 +14,34 @@ class Main {
         this.winWidth = window.innerWidth;
         this.winHeight = window.innerHeight;
 
+        this.roomManager;
+        this.seatManager;
+        this.avatarManager
+
         this.initCamera();
         this.initLight();
         this.initRenderer();
+
+    }
+
+    async initScene() {
+
+        this.roomManager = new RoomManager(this.camera);
+        this.seatManager = new SeatManager();
+        this.avatarManager = new AvatarManager(this.seatManager.positions, this.camera);
+
+        this.scene.add(this.roomManager.room);
+        this.scene.add(this.seatManager.chairs);
+        this.scene.add(this.avatarManager.avatar);
+
+        // 加载顺序
+        await this.roomManager.createDoor(); // 门
+        await this.seatManager.create(); // 椅子
+        await this.avatarManager.createLowAvatar(); // 人物低模
+        await this.avatarManager.createMediumAvatar(); // 人物中模
+        await this.roomManager.loadFirstResource(); // 会议室主体
+        this.avatarManager.createHighAvatar(); // 人物高模
+        this.roomManager.loadOtherResource() // 会议室其他
 
     }
 

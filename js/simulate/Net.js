@@ -1,5 +1,3 @@
-import * as THREE from './three.module.js';
-export {Net};
 class Net{
     object;
     constructor(){
@@ -241,3 +239,5 @@ class Net{
     }
 
 }
+
+export { Net };
