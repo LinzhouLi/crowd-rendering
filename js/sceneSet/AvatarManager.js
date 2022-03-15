@@ -160,10 +160,18 @@ class AvatarManager {
 
         this.createHost();
         this.initAvatarParams();
+        console.log(this.computeDisp());
         const filePath = this.initFilePath();
-        this.createLowAvatar(filePath);
-        this.createMediumAvatar(filePath);
-        this.createHighAvatar(filePath);
+        await this.createLowAvatar(filePath);
+        await this.createMediumAvatar(filePath);
+        await this.createHighAvatar(filePath);
+
+    }
+
+    computeDisp() {
+
+        console.log(this.manager.params);
+        return 1;
 
     }
 
@@ -182,7 +190,7 @@ class AvatarManager {
                 
                 let param = this.manager.params[i];
                 param.LOD = Math.max(lod[i], minFinishedLOD);
-                param.index = lodCount[param.sex][lod[i]]++;
+                param.index = lodCount[param.sex][param.LOD]++;
                 this.setInstanceParam( param );
                 
             }

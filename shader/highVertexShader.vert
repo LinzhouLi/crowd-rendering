@@ -83,7 +83,7 @@ vec3 vertexBlending(vec3 position, float frameIndex) { // 动画形变, 计算4�
 
 }
 
-vec3 frameInterpolation(vec3 position) { // 插值
+vec3 frameInterpolation(vec3 position) { // 点坐标插值, 考虑优化:变换矩阵插值
 
     float m = floor(time * speed / animationFrameCount);
     float temp = time * speed - m * animationFrameCount;
