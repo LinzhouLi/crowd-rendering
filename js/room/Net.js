@@ -1,4 +1,4 @@
-class Net{
+class Net {
     object;
     constructor(){
         const DAMPING = 0.03;//阻尼damping//坚硬程度

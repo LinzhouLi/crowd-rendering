@@ -1,5 +1,5 @@
 import { InstancedGroup } from "../lib/instancedLib/InstancedGroup.js";
-import { LODController } from "../lib/instancedLib/LODController.js";
+import { LODController } from "./LODController.js";
 
 class AvatarManager {
 
