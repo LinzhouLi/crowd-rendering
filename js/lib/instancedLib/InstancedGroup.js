@@ -80,6 +80,7 @@ class InstancedGroup {
     async initMaterial() {
 
         const textureData = await this.loadTexture(this.textureUrl);
+        textureData.flipY = false;
         const vertexShader = await this.loadShader(this.vertURL);
         const fragmentShader = await this.loadShader(this.fragURL);
 

@@ -1,147 +1,93 @@
 import { ResourceLoader } from '../ResourceLoader.js';
 
 class RoomManager{
-    loader;
-    room;
-    myVideoManager;
-    mid;
-    url;
-    camera;
 
-    resourceManager;
+    constructor (camera) {
+        
+        this.room = new THREE.Object3D();
+        this.room.scale.set(10, 10, 10);
+        this.url = "assets/model/room/";
+        this.doorUrl = "assets/model/room/door.gltf";
+        this.camera = camera;
+        this.roomScene;
 
-    myResourceLoader;
-
-    constructor(myVideoManager0, camera) {
-        var scope = this;
-        scope.loader = new THREE.GLTFLoader();
-        scope.room = new THREE.Object3D();
-        scope.myVideoManager = myVideoManager0;
-        scope.mid = 20;
-        scope.url = "assets/model/room/";
-        scope.camera = camera;
-
-        scope.firstLoad(scope.url);
-        scope.init();
     }
-    firstLoad(url) { // scope.url+"first.glb"
-        var scope = this;
-        new THREE.GLTFLoader().load(`${url}first.glb`, glb => {
-            // 每个材质一个mesh
-            scope.room.add(glb.scene);
-            new THREE.FileLoader(THREE.DefaultLoadingManager).load(`${url}test.json`, function (data) {
-                var json = JSON.parse(data);
-                var list = json.list;
-                var mapsIndex = json.mapsIndex;
 
-                glb.scene.traverse(node => {
-                    node.receiveShadow = true; // 阴影
-                    if(node instanceof THREE.Mesh){
-                        if (node.name === "室内-小显示器屏幕（非）"||
-                            node.name === "室内-大显示器屏幕（非）") { //室内-大显示器屏幕（非）
-                            //var screen=node;
-                            //if(scope.myVideoManager.video)scope.myVideoManager.init();
-                            //scope.myVideoManager.setMaterial(screen);
-                            node.material = window.videoMaterial;
-                        }
-                        var index = parseInt(list[node.name]);
-                        if (mapsIndex[index]) {
-                            new THREE.TextureLoader().load(`${url}ConferenceRoom${index}.jpg`, texture => {
-                                texture.wrapS = THREE.RepeatWrapping;
-                                texture.wrapT = THREE.RepeatWrapping;
-                                node.material = new THREE.MeshBasicMaterial({ map: texture });
-                            });
-                        }
-                    }
-                })
+    async createDoor () {
 
-            });
-        });
-    }
-}
-RoomManager.prototype.init = function() {
-    this.myResourceLoader = new ResourceLoader(
-        this.url,
-        this.camera,
-        gltf => { }
-    );
-    this.room.add(this.myResourceLoader.object);
-    this.room.scale.set(10, 10, 10); // 这里在预处理计算包围球时，可以通过设置scene来处理
-    this.loadDoor('assets/model/room/door.gltf');
-}
-RoomManager.prototype.loadDoor = function(url) {
-    var scope = this;
-    scope.loader.load(url, gltf => {
-        var geometry0 = gltf.scene.children[0].children[0].geometry;
-        var geometry1 = gltf.scene.children[0].children[1].geometry;
-        var geometry2 = gltf.scene.children[0].children[2].geometry;
+        const gltf = await this.loadGLB(this.doorUrl);
 
-        var material0 = gltf.scene.children[0].children[0].material;
-        var material1 = gltf.scene.children[0].children[1].material;
-        var material2 = gltf.scene.children[0].children[2].material;
+        let frameGeometry = gltf.scene.children[0].children[0].geometry;
+        let glassGeometry = gltf.scene.children[0].children[1].geometry;
+        let handleGeometry = gltf.scene.children[0].children[2].geometry;
 
-        var mesh0 = new THREE.InstancedMesh(geometry0, material0, 4); // 门主体
-        var mesh1 = new THREE.InstancedMesh(geometry1, material1, 4); // 门上的玻璃
-        var mesh2 = new THREE.InstancedMesh(geometry2, material2, 4); // 门把手
+        let frameMaterial = gltf.scene.children[0].children[0].material;
+        let glassMaterial = gltf.scene.children[0].children[1].material;
+        let handleMaterial = gltf.scene.children[0].children[2].material;
 
-        var dummy0 = new THREE.Object3D();
+        let frameMesh = new THREE.InstancedMesh(frameGeometry, frameMaterial, 4); // 门主体
+        let glassMesh = new THREE.InstancedMesh(glassGeometry, glassMaterial, 4); // 门上的玻璃
+        let mesh2 = new THREE.InstancedMesh(handleGeometry, handleMaterial, 4); // 门把手
+
+        let dummy0 = new THREE.Object3D();
         dummy0.rotation.set(Math.PI / 2, 0, Math.PI / 2);
         dummy0.position.set(-12.52, 2.741, 3.290);
         dummy0.scale.set(-0.001, -0.001, -0.001);
-        set(dummy0, [mesh0, mesh1, mesh2], 0);
+        set(dummy0, [frameMesh, glassMesh, mesh2], 0);
 
-        var dummy1 = new THREE.Object3D();
+        let dummy1 = new THREE.Object3D();
         dummy1.rotation.set(Math.PI / 2, Math.PI, 3 * Math.PI / 2);
         dummy1.position.set(-12.5244207382, 2.7411997318, 1.50942);
         dummy1.scale.set(-0.001, -0.001, -0.001);
-        set(dummy1, [mesh0, mesh1, mesh2], 0);
+        set(dummy1, [frameMesh, glassMesh, mesh2], 0);
 
-        var pre1 = [
-            1,0,0,0,
-            0,-1,0,0,
-            0,0,1,0,
-            0,0,0,1
+        let pre1 = [
+            1, 0, 0, 0,
+            0, -1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
         ];
-        var pre2 = [
-            1,0,0,0,
-            0,1,0,0,
-            0,0,-1,0,
-            0,0,0,1
+        let pre2 = [
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, -1, 0,
+            0, 0, 0, 1
         ];
-        var pre3 = [
-            1,0,0,0,
-            0,-1,0,0,
-            0,0,-1,0,
-            0,0,0,1
+        let pre3 = [
+            1, 0, 0, 0,
+            0, -1, 0, 0,
+            0, 0, -1, 0,
+            0, 0, 0, 1
         ];
-        set(dummy0, [mesh0, mesh1, mesh2], 1, pre1);
-        set(dummy1, [mesh0, mesh1, mesh2], 2, pre2);
-        set(dummy1, [mesh0, mesh1, mesh2], 3, pre3);
 
+        set(dummy0, [frameMesh, glassMesh, mesh2], 1, pre1);
+        set(dummy1, [frameMesh, glassMesh, mesh2], 2, pre2);
+        set(dummy1, [frameMesh, glassMesh, mesh2], 3, pre3);
 
-        move();
-        function move(){ // 通过requestAnimationFrame()设置开门动画
+        frameMesh.castShadow = true; // 阴影
+        frameMesh.receiveShadow = true;
+        glassMesh.castShadow = true; // 阴影
+        glassMesh.receiveShadow = true;
+        mesh2.castShadow = true; // 阴影
+        mesh2.receiveShadow = true;
+
+        this.room.add(frameMesh);
+        this.room.add(glassMesh);
+        this.room.add(mesh2);
+
+        openDoor();
+        
+        function openDoor(){ // 通过requestAnimationFrame()设置开门动画
             if (dummy0.rotation.z > 0) {
                 dummy0.rotation.z -= 0.02;
                 dummy1.rotation.z -= 0.02;
-                set(dummy0, [mesh0, mesh1, mesh2], 0);
-                set(dummy0, [mesh0, mesh1, mesh2], 1, pre1);
-                set(dummy1, [mesh0, mesh1, mesh2], 2, pre2);
-                set(dummy1, [mesh0, mesh1, mesh2], 3, pre3);
-                requestAnimationFrame(move);
+                set(dummy0, [frameMesh, glassMesh, mesh2], 0);
+                set(dummy0, [frameMesh, glassMesh, mesh2], 1, pre1);
+                set(dummy1, [frameMesh, glassMesh, mesh2], 2, pre2);
+                set(dummy1, [frameMesh, glassMesh, mesh2], 3, pre3);
+                requestAnimationFrame(openDoor);
             }
         }
-
-        // var myInterval = setInterval(function () { // setInterval()设置开门动画
-        //     if (dummy0.rotation.z > 0) {
-        //         dummy0.rotation.z -= 0.02;
-        //         dummy1.rotation.z -= 0.02;
-        //         set(dummy0, [mesh0,mesh1,mesh2], 0);
-        //         set(dummy0, [mesh0,mesh1,mesh2], 1, pre1);
-        //         set(dummy1, [mesh0,mesh1,mesh2], 2, pre2);
-        //         set(dummy1, [mesh0,mesh1,mesh2], 3, pre3);
-        //     } else clearInterval(myInterval);
-        // }, 10);
 
         function set(dummy, meshs, i, pre) {
             if (typeof (pre) === "undefined") {
@@ -155,7 +101,7 @@ RoomManager.prototype.loadDoor = function(url) {
                 }
             } else {
                 if(typeof (meshs.length) === "undefined") {
-                    var mat = new THREE.Matrix4();
+                    let mat = new THREE.Matrix4();
                     mat.set(...pre);
                     dummy.updateMatrix();
 
@@ -169,16 +115,115 @@ RoomManager.prototype.loadDoor = function(url) {
 
         }
 
-        mesh0.castShadow = true; // 阴影
-        mesh0.receiveShadow = true;
-        mesh1.castShadow = true; // 阴影
-        mesh1.receiveShadow = true;
-        mesh2.castShadow = true; // 阴影
-        mesh2.receiveShadow = true;
+    }
 
-        scope.room.add(mesh0);
-        scope.room.add(mesh1);
-        scope.room.add(mesh2);
-    });
+    async loadFirstResource() {
+
+        const gltf = await this.loadGLB(`${this.url}first.glb`);
+        this.roomScene = gltf.scene;
+        this.room.add(this.roomScene);
+
+        const json = await this.loadJSON(`${this.url}test.json`);
+        const list = json.list;
+        const mapsIndex = json.mapsIndex;
+
+        const videoMaterial = new THREE.MeshBasicMaterial();
+        let texture = new THREE.Texture();
+        texture.image = document.getElementById("bg");
+        texture.needsUpdate = true;
+        texture.flipY = false;
+        texture.wrapS = THREE.ClampToEdgeWrapping;
+        texture.wrapT = THREE.ClampToEdgeWrapping;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.format = THREE.RGBFormat;
+        videoMaterial.map = texture;
+
+        this.roomScene.traverse(node => { // 设置material
+            if (node instanceof THREE.Mesh) {
+
+                node.receiveShadow = true; // 阴影
+                const textureIndex = parseInt(list[node.name]);
+
+                if (node.name === "室内-小显示器屏幕（非）"||
+                    node.name === "室内-大显示器屏幕（非）") {
+                    node.material = videoMaterial;
+                }
+                else if (mapsIndex[textureIndex]) {
+                    this.loadTexture(`${this.url}ConferenceRoom${textureIndex}.jpg`).then(texture => {
+                        texture.wrapS = THREE.RepeatWrapping;
+                        texture.wrapT = THREE.RepeatWrapping;
+                        node.material = new THREE.MeshBasicMaterial({ map: texture });
+                    })
+                }
+
+            }
+        });
+
+    }
+
+    async loadOtherResource() {
+
+        const resourceLoader = new ResourceLoader(
+            this.url,
+            this.camera,
+            gltf => { }
+        );
+        this.room.add(resourceLoader.object);
+
+    }
+
+    setVideo(videoMaterial) {
+
+        this.roomScene.traverse(node => { // 设置material
+            if (node instanceof THREE.Mesh) {
+                if (node.name === "室内-小显示器屏幕（非）"||
+                    node.name === "室内-大显示器屏幕（非）") {
+                    node.material = videoMaterial;
+                }
+            }
+        });
+
+    }
+
+    loadGLB( path ) {
+
+        return new Promise( (resolve, reject) => { 
+            const modelLoader = new THREE.GLTFLoader();
+            modelLoader.load( path, gltf => {
+                resolve( gltf );
+            } );
+        } );
+
+    }
+
+    loadJSON( path ) {
+
+        return new Promise( (resolve, reject) => { 
+            const loader = new THREE.FileLoader();
+            loader.load( path, data => {
+                const json = JSON.parse( data );
+                resolve( json );
+            } );
+        } );
+
+    }
+
+    loadTexture( path ) {
+
+        return new Promise( (resolve, reject) => {
+            new THREE.TextureLoader().load(
+                path,
+                texture => { // onLoad
+                    resolve( texture );
+                }, 
+                null, // onProgress
+                error => reject( error ) // onError
+            )
+        });
+        
+    }
+
 }
+
 export { RoomManager };
