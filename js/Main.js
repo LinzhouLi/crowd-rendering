@@ -38,10 +38,10 @@ class Main {
         await this.roomManager.createDoor(); // 门
         await this.seatManager.create(); // 椅子
         await this.avatarManager.createLowAvatar(); // 人物低模
-        await this.avatarManager.createMediumAvatar(); // 人物中模
         await this.roomManager.loadFirstResource(); // 会议室主体
-        this.avatarManager.createHighAvatar(); // 人物高模
-        this.roomManager.loadOtherResource() // 会议室其他
+        await this.avatarManager.createMediumAvatar(); // 人物中模
+        await this.avatarManager.createHighAvatar(); // 人物高模
+        await this.roomManager.loadOtherResource() // 会议室其他
 
     }
 
