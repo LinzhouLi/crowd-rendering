@@ -156,10 +156,53 @@ class AvatarManager {
 
     }
 
-    computeDisp() {
+    async computeDisp() {
 
-        // console.log(this.manager.params);
-        return 1;
+        // 峰值信噪比差异
+        const psnr = await this.loadJSON("assets/PSNR.json");
+        let texSum = 0;
+        for (let i = 0; i < this.seatPositions.length; i++) {
+            for (let j = i+1; j < this.seatPositions.length; j++) {
+                let diff = 0,
+                    idi, idj;
+                // 女性贴图id偏移17
+                if (this.manager.params[i].sex == "male") idi = this.manager.params[i].textureType[0];
+                else idi = this.manager.params[i].textureType[0] + 17;
+                if (this.manager.params[j].sex == "male") idj = this.manager.params[j].textureType[0];
+                else idj = this.manager.params[j].textureType[0] + 17;
+                diff = psnr[idi][idj];
+                // 两人物距离
+                let vec = [
+                    this.manager.params[i].position[0] - this.manager.params[j].position[0], 
+                    this.manager.params[i].position[1] - this.manager.params[j].position[1], 
+                    this.manager.params[i].position[2] - this.manager.params[j].position[2]
+                ];
+                texSum += 2 * 
+                    diff / (Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]) * 
+                    (this.seatPositions.length - 1) * this.seatPositions.length);
+            }
+        }
+        console.log("diff_texture: ", texSum);
+
+        // 局部差异
+        let localSum = 0;
+        for (let i = 0; i < this.seatPositions.length; i++) {
+            for (let j = i + 1; j < this.seatPositions.length; j++) {
+                let diff = 0;
+                for (let k = 1; k < 4; k++) {//三个部位
+                    diff += Math.abs(this.manager.params[i].bodyScale[k] - this.manager.params[j].bodyScale[k]);
+                }
+                let vec = [
+                    this.manager.params[i].position[0] - this.manager.params[j].position[0], 
+                    this.manager.params[i].position[1] - this.manager.params[j].position[1], 
+                    this.manager.params[i].position[2] - this.manager.params[j].position[2]
+                ];
+                localSum += 2 * 
+                    diff / (Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]) * 
+                    (this.seatPositions.length - 1) * this.seatPositions.length);
+            }
+        }
+        console.log("diff_local: ", localSum);
 
     }
 
