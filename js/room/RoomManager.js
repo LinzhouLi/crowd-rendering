@@ -149,13 +149,13 @@ class RoomManager{
                     node.name === "室内-大显示器屏幕（非）") {
                     node.material = videoMaterial;
                 }
-                else if (mapsIndex[textureIndex]) {
-                    this.loadTexture(`${this.url}ConferenceRoom${textureIndex}.jpg`).then(texture => {
-                        texture.wrapS = THREE.RepeatWrapping;
-                        texture.wrapT = THREE.RepeatWrapping;
-                        node.material = new THREE.MeshBasicMaterial({ map: texture });
-                    })
-                }
+                // else if (mapsIndex[textureIndex]) {
+                //     this.loadTexture(`${this.url}ConferenceRoom${textureIndex}.jpg`).then(texture => {
+                //         texture.wrapS = THREE.RepeatWrapping;
+                //         texture.wrapT = THREE.RepeatWrapping;
+                //         node.material = new THREE.MeshBasicMaterial({ map: texture });
+                //     })
+                // }
 
             }
         });
