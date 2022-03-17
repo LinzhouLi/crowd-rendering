@@ -120,7 +120,7 @@ class AvatarManager {
             let param = {
                 position: this.seatPositions[i],
                 scale: [ 2.6, 2.6, 2.6 ],
-                animationSpeed: 4 + Math.random() * 1,
+                animationSpeed: 2.5 + Math.random() * 0.5,
                 LOD: -1,
                 textureType: [0, 0, 0, 0],
                 animationType: 0,

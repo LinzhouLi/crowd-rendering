@@ -12,7 +12,7 @@ class MoveManager{
         scope.avatar=avatar;
         scope.roamPath=roamPath;
         scope.myPreviewflag=1;//确定目标节点
-        scope.stopFlag=true;
+        scope.stopFlag=false;
         scope.isLoop=false;//如果不进行循环漫游的话，第一行的初始状态就没用了
 
         scope.myMakeOneRoamStep=new MakeOneRoamStep();
@@ -25,23 +25,6 @@ class MoveManager{
             if(!scope.stopFlag)//是否停止自动漫游
                 if(scope.myMakeOneRoamStep.preview(scope.myPreviewflag,scope.avatar,scope.roamPath)) {
                     scope.myPreviewflag++;
-                    console.log(scope.myPreviewflag)
-                    if(scope.myPreviewflag===5){
-                        window.play();
-                        console.log("播放了面部动画！")
-                        //window.play=function(){console.log("！多次播放面部动画")}
-                    }
-                    if(scope.myPreviewflag=== scope.roamPath.length){
-                        if(scope.isLoop)scope.myPreviewflag = 0;
-                        else scope.stopFlag=true;
-                        window.videoMaterial.map=window.videoMaterial.map1;
-                        console.log("开始播放视频！")
-                        window.video.play();
-                        //window.guest.visible=false;
-                        console.log("隐藏演讲者")
-                        window.roamFinish=true;
-                        console.log("将模型切换为高模")
-                    }
                 }
             requestAnimationFrame(autoRoam0);
         }
