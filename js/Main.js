@@ -2,6 +2,8 @@ import { RoomManager } from './room/RoomManager.js';
 import { AvatarManager } from './avatar/AvatarManager.js';
 import { SeatManager } from './avatar/SeatManager.js';
 import { MoveManager } from './lib/playerControl/MoveManager.js';
+import { Net } from './room/Net.js';
+import { Blur } from './Blur.js';
 
 class Main {
 
@@ -11,6 +13,7 @@ class Main {
         this.showFPS = true;
         this.fpsInterval;
         this.scene = new THREE.Scene();
+        this.background = new Blur();
         this.camera;
         this.renderer;
         this.stereoEffect;
@@ -38,13 +41,16 @@ class Main {
         this.scene.add(this.avatarManager.avatar);
 
         // 加载顺序
+        await this.avatarManager.init();
         await this.roomManager.createDoor(); // 门
         await this.roomManager.loadFirstResource(); // 会议室主体
+        this.initCurtain(); // 帘子
         await this.seatManager.create(); // 椅子
+        await this.avatarManager.initHost(); // 主持人
         await this.avatarManager.createLowAvatar(); // 人物低模
         await this.avatarManager.createMediumAvatar(); // 人物中模
         await this.avatarManager.createHighAvatar(); // 人物高模
-        this.preview(); //开启预览
+        this.preview(); // 开启预览
         await this.roomManager.loadNextResource(); // 会议室其他
         await this.roomManager.loadOtherResource(); // 会议室其他
 
@@ -71,7 +77,23 @@ class Main {
             , [-30.440306021267492,125.36564291071822,-18.58769506,-1.5921799912480827,  -1.0399661678502943,  -1.5955909248070625,50]
 
         ];
-        let moveManager = new MoveManager(this.camera, movePath);
+        new MoveManager(this.camera, movePath);
+
+    }
+
+    initCurtain() {
+
+        let net = new Net().object;
+        net.position.set( 170, 17, -59 )
+        net.scale.set( -0.03, 0.03, 0.04 )
+        net.rotation.set( 0, Math.PI / 2, 0 )
+        this.scene.add( net );
+
+        net = new Net().object;
+        net.position.set( 170, 17, 29 )
+        net.scale.set( 0.03, 0.03, 0.04 )
+        net.rotation.set( 0, Math.PI / 2, 0 )
+        this.scene.add( net );
 
     }
 

@@ -32,28 +32,12 @@
 		<script src="js/lib/threeJS/GLTFLoader.js"></script>
 		<script type="module">
 			import { Main } from './js/Main.js';
-			import { Net } from './js/room/Net.js';
-			import { Blur } from './js/Blur.js';
 			import { PlayerControl } from './js/lib/playerControl/PlayerControl.js';
-			
-			new Blur(); // 首页背景
 
 			let main = new Main();
 			new PlayerControl(main.camera);
 			main.render();
 			main.initScene();
-
-			var net=new Net().object;
-			net.position.set(170,17,-59)
-			net.scale.set(-0.03,0.03,0.04)
-			net.rotation.set(0,Math.PI/2,0)
-			main.scene.add(net);
-
-			net=new Net().object;
-			net.position.set(170,17,29)
-			net.scale.set(0.03,0.03,0.04)
-			net.rotation.set(0,Math.PI/2,0)
-			main.scene.add(net);
 			
 		</script>
 	</body>
