@@ -123,6 +123,10 @@ class RoomManager{
         this.roomScene = gltf.scene;
         this.room.add(this.roomScene);
 
+    }
+
+    async loadNextResource() {
+
         const json = await this.loadJSON(`${this.url}test.json`);
         const list = json.list;
         const mapsIndex = json.mapsIndex;
@@ -173,16 +177,28 @@ class RoomManager{
 
     }
 
-    setVideo(videoMaterial) {
+    playVideo() {
+        
+        const video = document.getElementById("video");
+        let videoTexture = new THREE.VideoTexture( video );
+        videoTexture.flipY = false;
+        videoTexture.wrapS = THREE.ClampToEdgeWrapping;
+        videoTexture.wrapT = THREE.ClampToEdgeWrapping;
+        videoTexture.minFilter = THREE.LinearFilter;
+        videoTexture.magFilter = THREE.LinearFilter;
+        videoTexture.format = THREE.RGBFormat;
 
         this.roomScene.traverse(node => { // 设置material
             if (node instanceof THREE.Mesh) {
                 if (node.name === "室内-小显示器屏幕（非）"||
                     node.name === "室内-大显示器屏幕（非）") {
-                    node.material = videoMaterial;
+                    node.material.map.dispose();
+                    node.material.map = videoTexture;
                 }
             }
         });
+
+        video.play();
 
     }
 

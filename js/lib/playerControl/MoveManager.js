@@ -1,51 +1,38 @@
-export {MoveManager};
 class MoveManager{
-    avatar;
-    roamPath;
-    myPreviewflag;//确定目标节点
-    stopFlag;//控制是否开始移动
-    isLoop;//如果不进行循环漫游的话，第一行的初始状态就没用了
 
-    myMakeOneRoamStep=new MakeOneRoamStep();
-    constructor(avatar,roamPath){
-        var scope=this;
-        scope.avatar=avatar;
-        scope.roamPath=roamPath;
-        scope.myPreviewflag=1;//确定目标节点
-        scope.stopFlag=true;
-        scope.isLoop=false;//如果不进行循环漫游的话，第一行的初始状态就没用了
+    constructor( avatar, roamPath, funcArr ) {
 
-        scope.myMakeOneRoamStep=new MakeOneRoamStep();
-        this.#autoRoam();//创建后自动执行
+        this.avatar = avatar;
+        this.roamPath = roamPath;
+        this.funcArr = funcArr;
+        this.nextPreviewFlag = 1;
+        this.stopFlag = false;
+
+        this.myMakeOneRoamStep = new MakeOneRoamStep();
+        this.startPreview();
+        
     }
-    #autoRoam=function () {
-        var scope=this;
-        autoRoam0();
-        function autoRoam0(){
-            if(!scope.stopFlag)//是否停止自动漫游
-                if(scope.myMakeOneRoamStep.preview(scope.myPreviewflag,scope.avatar,scope.roamPath)) {
-                    scope.myPreviewflag++;
-                    console.log(scope.myPreviewflag)
-                    if(scope.myPreviewflag===5){
-                        window.play();
-                        console.log("播放了面部动画！")
-                        //window.play=function(){console.log("！多次播放面部动画")}
-                    }
-                    if(scope.myPreviewflag=== scope.roamPath.length){
-                        if(scope.isLoop)scope.myPreviewflag = 0;
-                        else scope.stopFlag=true;
-                        window.videoMaterial.map=window.videoMaterial.map1;
-                        console.log("开始播放视频！")
-                        window.video.play();
-                        //window.guest.visible=false;
-                        console.log("隐藏演讲者")
-                        window.roamFinish=true;
-                        console.log("将模型切换为高模")
-                    }
+    
+    startPreview() {
+        let scope = this;
+        autoRoam();
+        function autoRoam(){
+            if (
+                scope.myMakeOneRoamStep.preview(
+                    scope.nextPreviewFlag, 
+                    scope.avatar, 
+                    scope.roamPath
+                )
+            ) {
+                if ( scope.funcArr && scope.funcArr[scope.nextPreviewFlag] ) {
+                    scope.funcArr[scope.nextPreviewFlag]();
                 }
-            requestAnimationFrame(autoRoam0);
+                scope.nextPreviewFlag++;
+            }
+            requestAnimationFrame(autoRoam);
         }
     }
+
     static getArray=function(arr1){//通过平面位置获取输入数据
         //arr1:  x,z
         //arr2:  x,y,z,  a,b,c, time
@@ -70,6 +57,7 @@ class MoveManager{
         return arr2;
     }
 }
+
 class MakeOneRoamStep{
     pattern;
     rectify;//记录这是第几步//第一步更新参数，最后一步纠正状态
@@ -116,7 +104,7 @@ class MakeOneRoamStep{
         var x1,y1,z1,x2,y2,z2,//位置
             a1,b1,c1,a2,b2,c2;//角度//a=c
 
-        if(mystate>=mydata.length)return;
+        if(mystate>=mydata.length) return false;
         var time=mydata[mystate][6];
         //当前状态
         x1=avatar.position.x;
@@ -162,3 +150,5 @@ class MakeOneRoamStep{
         }
     }
 }
+
+export { MoveManager };
