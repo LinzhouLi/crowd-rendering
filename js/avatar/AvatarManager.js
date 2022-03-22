@@ -60,6 +60,11 @@ class AvatarManager {
             instanceGroup: {
                 male: new Array(3), // 3级LOD
                 female: new Array(3)
+            },
+            host: {
+                audio: null,
+                mixer: new Array(7),
+                cb: null
             }
         };
 
@@ -387,75 +392,85 @@ class AvatarManager {
 
     async initHost() {
 
-        let orderList = [[1, 2, 3, 3, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 0, 3, 1, 2, 1, 4, 0, 3, 1, 2, 1, 4, 0, 3, 1, 2, 1, 4]];
-        let timeList = [3845];
-        let moveNum = orderList[0].length; // 面部动作数量
-        let moveTime = timeList[0] / moveNum; // 每个动作的时间
-
-        // 音频
+        // 音频初始化
         let audioBuffer = await this.loadAudio( this.filePath.host.voice );
         const listener = new THREE.AudioListener();
         this.camera.add( listener );
-        const sound = new THREE.Audio( listener );
-        sound.setBuffer( audioBuffer );
-        sound.play();
+        this.manager.host.audio = new THREE.Audio( listener );
+        this.manager.host.audio.setBuffer( audioBuffer );
+        this.manager.host.audio.play();
 
-        let mixer = { };
-        let clock = new THREE.Clock();
-        let upda = 0;
-        let pastTime = 0; // 第一次播放时，音频会相对动画延迟。
-
+        // host 模型
         const gltf = await this.loadGLB( this.filePath.host.model );
         let model = gltf.scene;
+        this.avatar.add( model );
         model.position.set( 198, 9, -65 );
         model.rotation.set( 0, -Math.PI / 2, 0 );
         model.scale.set( 10, 10, 10 );
-        model.traverse(function (node) {
-            if(node instanceof THREE.SkinnedMesh){
-                node.material.side=THREE.DoubleSide;
-                node.frustumCulled=false;
+        model.traverse( node => {
+            if ( node instanceof THREE.SkinnedMesh ) {
+                node.material.side = THREE.DoubleSide;
+                node.frustumCulled = false;
             }
-        })
-        this.avatar.add(model);
+        });
+
         // 将模型绑定到动画混合器里面
         let anima = gltf.animations;
-        mixer[0] = new THREE.AnimationMixer( model );
-        mixer[1] = new THREE.AnimationMixer( model );
-        mixer[2] = new THREE.AnimationMixer( model );
-        mixer[3] = new THREE.AnimationMixer( model );
-        mixer[4] = new THREE.AnimationMixer( model );
-        mixer[5] = new THREE.AnimationMixer( model );
-        mixer[6] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[0] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[1] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[2] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[3] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[4] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[5] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[6] = new THREE.AnimationMixer( model );
         // 同时将这个外部模型的动画全部绑定到动画混合器里面
-        mixer[0].clipAction(anima[5]).play(); // b
-        mixer[1].clipAction(anima[7]).play(); // d
-        mixer[2].clipAction(anima[3]).play(); // a
-        mixer[3].clipAction(anima[6]).play(); // e
-        mixer[4].clipAction(anima[10]).play(); // u
-        mixer[5].clipAction(anima[1]).play(); // static
-        mixer[6].clipAction(anima[0]).play(); // static
-        
+        this.manager.host.mixer[0].clipAction(anima[5]).play(); // b
+        this.manager.host.mixer[1].clipAction(anima[7]).play(); // d
+        this.manager.host.mixer[2].clipAction(anima[3]).play(); // a
+        this.manager.host.mixer[3].clipAction(anima[6]).play(); // e
+        this.manager.host.mixer[4].clipAction(anima[10]).play(); // u
+        this.manager.host.mixer[5].clipAction(anima[1]).play(); // static
+        this.manager.host.mixer[6].clipAction(anima[0]).play(); // static
+
+    }
+
+    playAudio() {
+
+        let scope = this;
+        let orderList = [1, 2, 3, 3, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 0, 3, 1, 2, 1, 4, 0, 3, 1, 2, 1, 4, 0, 3, 1, 2, 1, 4];
+        let timeList = 3845;
+        let moveNum = orderList.length; // 面部动作数量
+        let moveTime = timeList / moveNum; // 每个动作的时间
+        let upda = 0;
+        let pastTime = 0; // 第一次播放时, 音频会相对动画延迟
+        let clock = new THREE.Clock();
+
         let boneArm = [];
         let boneFace = [];
         for (let i = 70; i < 120; i++) boneFace.push(i);
         for (let i = 0; i < 216; i++) boneArm.push(i);
 
-        animate(); 
+        this.manager.host.audio.play();
+        animate();
+
         function animate() {
-            requestAnimationFrame( animate );
-            let time = clock.getDelta() * 1000;
-            if (sound.isPlaying) {
+            if ( scope.manager.host.audio.isPlaying ) {
                 upda = getUpda();
-                mixer[5].update(0.01, boneArm); // 手臂
-                mixer[upda].update(0.019, boneFace); // 口型
-                pastTime += time;
+                scope.manager.host.mixer[5].update( 0.01, boneArm ); // 手臂
+                scope.manager.host.mixer[upda].update( 0.019, boneFace ); // 口型
+                pastTime += clock.getDelta() * 1000;
+                requestAnimationFrame( animate );
             }
-            else mixer[6].update(0.01); // 手臂
+            else {
+                scope.manager.host.mixer[6].update( 0.01 );
+                if ( scope.manager.host.cb ) scope.manager.host.cb();
+            }
         }
+
         function getUpda() {
             let n = parseInt( pastTime / moveTime );
-            if ( n < moveNum ) upda = orderList[0][n];
-            else upda = orderList[0][moveNum-1] // 播放过慢
+            if ( n < moveNum ) upda = orderList[n];
+            else upda = orderList[moveNum - 1] // 播放过慢
             return upda;
         }
 

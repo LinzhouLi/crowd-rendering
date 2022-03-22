@@ -1,6 +1,10 @@
 class Blur {
     constructor() {
 
+        let scope = this;
+        this.started = false;
+        this.startFunc = null;
+
         let bg = document.getElementById("bg");
         bg.width = window.innerWidth;
         bg.height = window.innerHeight;
@@ -28,7 +32,9 @@ class Blur {
         }
 
         button.onmousedown = function() {
-            document.getElementById("cheat").style.visibility = 'hidden';
+            document.getElementById("cheat").style.display = 'none';
+            scope.started = true;
+            if( scope.startFunc ) scope.startFunc();
         }
 
         document.getElementById("cheat").appendChild( button );

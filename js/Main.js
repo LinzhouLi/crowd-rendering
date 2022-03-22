@@ -32,6 +32,8 @@ class Main {
 
     async initScene() {
 
+        let scope = this;
+
         this.roomManager = new RoomManager(this.camera);
         this.seatManager = new SeatManager();
         this.avatarManager = new AvatarManager(this.seatManager.positions, this.camera);
@@ -46,38 +48,57 @@ class Main {
         await this.roomManager.loadFirstResource(); // 会议室主体
         this.initCurtain(); // 帘子
         await this.seatManager.create(); // 椅子
-        await this.avatarManager.initHost(); // 主持人
         await this.avatarManager.createLowAvatar(); // 人物低模
         await this.avatarManager.createMediumAvatar(); // 人物中模
+        await this.avatarManager.initHost(); // 主持人
         await this.avatarManager.createHighAvatar(); // 人物高模
-        this.preview(); // 开启预览
+
+        if ( this.background.started ) manage(); // 开启预览
+        else this.background.startFunc = manage;
+
         await this.roomManager.loadNextResource(); // 会议室其他
         await this.roomManager.loadOtherResource(); // 会议室其他
+
+        function manage() {
+
+            scope.preview();
+
+        }
 
     }
 
     preview() {
 
+        let scope = this;
         let movePath = [
-            [-155, 41, 22, -1.5572, -1.47875, -1.55714, 80]
-            , [-119, 39, 24, -0.91, -1.48, -0.91, 80]
-            , [-59, 48, -14, -1.25, -1.52, -1.24, 80]
-            , [-122,39,-116,-2.863791,-1.04, -2.8,80]
-            , [129, 37, -66, -1.25, -1.52, -1.24, 200]
+            [-155, 41, 22, -1.5572, -1.47875, -1.55714, 80],
+            [-119, 39, 24, -0.91, -1.48, -0.91, 80],
+            [-59, 48, -14, -1.25, -1.52, -1.24, 80],
+            [-122,39,-116,-2.863791,-1.04, -2.8,80],
+            [129, 37, -66, -1.25, -1.52, -1.24, 200],
 
-            , [186.629944, 26.749136,-64.9026,-1.678751829760329,-1.183107113654890, -1.68733072496894, 50]
-            , [186.629944, 26.749137,-64.9027,-1.678751829760328,-1.183107113654891, -1.68733072496893, 100]
+            [186.629944, 26.749136,-64.9026,-1.678751829760329,-1.183107113654890, -1.68733072496894, 50],
+            [186.629944, 26.749137,-64.9027,-1.678751829760328,-1.183107113654891, -1.68733072496893, 100],
 
-            , [130, 37, -12, -1.25, -1.52, -1.24, 50]
-            , [129, 37, -27, -1.25, -1.52, -1.24, 50]
-            , [229, 29, -19, -1.21, 1.46, 1.19, 80]
-            , [183, 63, -19, -1.67, 1.35, 1.66, 80]
+            [130, 37, -12, -1.25, -1.52, -1.24, 50],
+            [129, 37, -27, -1.25, -1.52, -1.24, 50],
+            [229, 29, -19, -1.21, 1.46, 1.19, 80],
+            [183, 63, -19, -1.67, 1.35, 1.66, 80],
 
-            , [77.68, 109.13, -17.50,-1.67, 1.35, 1.66,50]
-            , [-30.440306021267492,125.36564291071822,-18.58769506,-1.5921799912480827,  -1.0399661678502943,  -1.5955909248070625,50]
+            [77.68, 109.13, -17.50,-1.67, 1.35, 1.66, 50],
+            [-30.440306021267492,125.36564291071822,-18.58769506,-1.5921799912480827,  -1.0399661678502943,  -1.5955909248070625, 50]
 
         ];
-        new MoveManager(this.camera, movePath);
+
+        let funcArr = new Array( movePath.length );
+        funcArr[3] = function() { scope.avatarManager.playAudio(); }
+        funcArr[ movePath.length - 1 ] = function() {
+            if ( scope.avatarManager.manager.host.audio.isPlaying ) {
+                scope.avatarManager.manager.host.cb = scope.roomManager.playVideo;
+            }
+            else scope.roomManager.playVideo();
+        }
+        new MoveManager(this.camera, movePath, funcArr);
 
     }
 
