@@ -164,7 +164,7 @@ class Net {
             //console.log(xy,p.original.x,p.original.y,p.original.z)
         }
         animate( 0 );
-        function animate( time0 ) {
+        function animate( time ) {
             requestAnimationFrame( animate );
             const p = cloth.particles;
             for ( let i = 0, il = p.length; i < il; i ++ ) {
@@ -173,7 +173,7 @@ class Net {
             }
             clothGeometry.attributes.position.needsUpdate = true;
             clothGeometry.computeVertexNormals();
-            simulate( 3*time0  );
+            simulate( 3 * time  );
         }
         function simulate( now ) {//开始模拟
             const particles = cloth.particles;
@@ -218,7 +218,7 @@ class Net {
                 const xy = pins[ i ];//粒子编号
                 const p = particles[ xy ];//获取粒子
 
-                if(window.start&&p.original.x>p.original_x-i*20){
+                if(p.original.x>p.original_x-i*20){
                     p.original.x=p.original.x-i*0.15;
                 }
 

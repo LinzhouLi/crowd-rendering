@@ -60,6 +60,11 @@ class AvatarManager {
             instanceGroup: {
                 male: new Array(3), // 3级LOD
                 female: new Array(3)
+            },
+            host: {
+                audio: null,
+                mixer: new Array(7),
+                cb: null
             }
         };
 
@@ -67,14 +72,26 @@ class AvatarManager {
             return [ a[0] + b[0], a[1] + b[1], a[2] + b[2] ];
         }
 
+    }
+
+    async init() {
+
+        this.psnr = await this.loadJSON("assets/PSNR.json"); // 峰值信噪比
+        this.initFilePath();
         this.initAvatarParams();
         this.computeDisp();
-        this.initFilePath();
+
     }
 
     initFilePath() {
 
         this.filePath = {
+
+            host: {
+                voice: "assets/model/host/voice.m4a",
+                model: "assets/model/host/model.glb"
+            },
+
             shader: {
                 highVertexShader: "shader/highVertexShader.vert",
                 highFragmentShader: "shader/highFragmentShader.frag",
@@ -110,6 +127,7 @@ class AvatarManager {
                 lowModelPath: "assets/model/avatar/female_low.glb",
                 lowTexturePath: "assets/texture/femaleTextureLow.jpg",
             }
+
         };
 
     }
@@ -156,53 +174,164 @@ class AvatarManager {
 
     }
 
-    async computeDisp() {
+    initAvatarParamsGreedly() {
 
-        // 峰值信噪比差异
-        const psnr = await this.loadJSON("assets/PSNR.json");
-        let texSum = 0;
-        for (let i = 0; i < this.seatPositions.length; i++) {
-            for (let j = i+1; j < this.seatPositions.length; j++) {
-                let diff = 0,
-                    idi, idj;
-                // 女性贴图id偏移17
-                if (this.manager.params[i].sex == "male") idi = this.manager.params[i].textureType[0];
-                else idi = this.manager.params[i].textureType[0] + 17;
-                if (this.manager.params[j].sex == "male") idj = this.manager.params[j].textureType[0];
-                else idj = this.manager.params[j].textureType[0] + 17;
-                diff = psnr[idi][idj];
-                // 两人物距离
-                let vec = [
-                    this.manager.params[i].position[0] - this.manager.params[j].position[0], 
-                    this.manager.params[i].position[1] - this.manager.params[j].position[1], 
-                    this.manager.params[i].position[2] - this.manager.params[j].position[2]
-                ];
-                texSum += 2 * 
-                    diff / (Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]) * 
-                    (this.seatPositions.length - 1) * this.seatPositions.length);
-            }
-        }
-        console.log("diff_texture: ", texSum);
-
-        // 局部差异
-        let localSum = 0;
-        for (let i = 0; i < this.seatPositions.length; i++) {
-            for (let j = i + 1; j < this.seatPositions.length; j++) {
-                let diff = 0;
-                for (let k = 1; k < 4; k++) {//三个部位
-                    diff += Math.abs(this.manager.params[i].bodyScale[k] - this.manager.params[j].bodyScale[k]);
+        const rowNum = [24, 34, 28], col = 26;
+        for (let l = 0; l < 3; l++) {
+            const row = rowNum[l];
+            for (let k = 0; k < 3; k++) {
+                let bais = k * row * col;
+                for (let p = 0; p < l; p++) {
+                    bais += rowNum[p] * col * 3;                 
                 }
-                let vec = [
-                    this.manager.params[i].position[0] - this.manager.params[j].position[0], 
-                    this.manager.params[i].position[1] - this.manager.params[j].position[1], 
-                    this.manager.params[i].position[2] - this.manager.params[j].position[2]
-                ];
-                localSum += 2 * 
-                    diff / (Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]) * 
-                    (this.seatPositions.length - 1) * this.seatPositions.length);
+                let genId =  (x, y) => {
+                    return bais + x * col + y;
+                };
+                for (let i = 0; i < row; i++) {
+                    for (let j = 0; j < col; j++) {
+                        const id = genId(i,j);
+                        let islegal=(x,y) => {
+                            if (x < 26 && x >= 0 && y < row && y >= 0) return true;
+                            else return false;
+                        };
+                        let param = {
+                            position: this.seatPositions[id],
+                            scale: [ 2.6, 2.6, 2.6 ],
+                            animationSpeed: 4 + Math.random() * 1,
+                            LOD: -1,
+                            textureType: [0, 0, 0, 0],
+                            animationType: 0,
+                            bodyScale: [
+                                1,
+                                0.9 + 0.2 * Math.random(),
+                                0.9 + 0.2 * Math.random(),
+                                0.9 + 0.2 * Math.random()
+                            ]
+                        }
+                        let candidate = [];
+                        if (islegal(i - 1, j)) candidate.push(genId(i - 1, j));
+                        if (islegal(i - 1, j - 1)) candidate.push(genId(i - 1, j - 1));
+                        if (islegal(i - 1, j + 1)) candidate.push(genId(i - 1, j + 1));
+                        if (islegal(i, j - 1)) candidate.push(genId(i, j - 1));
+                        let comp =  (a, b) => {
+                            let x = a, y = b;
+                            let suma = 0,
+                                sumb = 0;
+                            for (let t = 0; t < candidate.length; t++) {
+                                const element = candidate[t];
+                                let temp = this.manager.params[element];
+                                suma += this.computePSNR(temp, x);
+                                sumb += this.computePSNR(temp, y)
+                            }
+                            if (suma < sumb) return 1;
+                            if (suma > sumb) return -1;
+                            return 0;
+                        };
+                        if (Math.random() < 0.5) { // 以0.5的概率生成男性
+                            param.animationType = Math.floor(Math.random() * this.manager.config.male.animationCount);
+                            param.textureType = [
+                                Math.floor(Math.random() * this.manager.config.male.textureCount),
+                                Math.floor(Math.random() * this.manager.config.male.textureCount),
+                                Math.floor(Math.random() * this.manager.config.male.textureCount),
+                                Math.floor(Math.random() * this.manager.config.male.textureCount)
+                            ];
+                            param.sex = "male";
+                            if (candidate.length>0) {
+                                let toSort = [];
+                                for (let index = 0; index < this.manager.config.male.textureCount; index++) {
+                                    let tmp = { position: [], textureType: [0, 0, 0, 0] };
+                                    tmp.position = param.position;
+                                    tmp.textureType[0] = index;
+                                    toSort.push(tmp);
+                                }
+                                toSort.sort(comp);
+                                param.textureType[0] =
+                                    toSort[Math.floor(Math.random() * 3)].textureType[0];
+                            }
+                        } else { // 以0.5的概率生成女性
+                            param.animationType = Math.floor(Math.random() * this.manager.config.female.animationCount);
+                            param.textureType = [
+                                Math.floor(Math.random() * this.manager.config.female.textureCount),
+                                Math.floor(Math.random() * this.manager.config.female.textureCount),
+                                Math.floor(Math.random() * this.manager.config.female.textureCount),
+                                Math.floor(Math.random() * this.manager.config.female.textureCount)
+                            ];
+                            param.sex = "female";
+                            if (candidate.length) {
+                                let toSort = [];
+                                for (let index = 0; index < this.manager.config.female.textureCount; index++) {
+                                    let tmp = { position: [], textureType: [0, 0, 0, 0] };
+                                    tmp.position = param.position;
+                                    tmp.textureType[0] = index;
+                                    toSort.push(tmp);
+                                }
+                                toSort.sort(comp);
+                                param.textureType[0] =
+                                    toSort[Math.floor(Math.random() * 3)].textureType[0];
+                            }
+                        }
+                        this.manager.params.push( param );
+                    }
+                }
             }
         }
-        console.log("diff_local: ", localSum);
+        
+    }
+
+    computeDisp() {
+
+       // 峰值信噪比差异
+       let texSum = 0;
+       for (let i = 0; i < this.seatPositions.length; i++) {
+           for (let j = i+1; j < this.seatPositions.length; j++) {
+               texSum += this.computePSNR(this.manager.params[i],this.manager.params[j]);
+           }
+       }
+       console.log("diff_texture: ", texSum);
+
+       // 局部差异
+       let localSum = 0;
+       for (let i = 0; i < this.seatPositions.length; i++) {
+           for (let j = i + 1; j < this.seatPositions.length; j++) {
+               localSum += this.computeLocal(this.manager.params[i], this.manager.params[j]);
+           }
+       }
+       console.log("diff_local: ", localSum);
+
+    }
+
+    computePSNR(ava1, ava2) {
+
+        let diff = 0, id1, id2;
+        if (ava1.sex == "male") id1 = ava1.textureType[0];
+        else id1 = ava1.textureType[0] + this.manager.config.male.textureCount;
+        if (ava2.sex == "male") id2 = ava2.textureType[0];
+        else id2 = ava2.textureType[0] + this.manager.config.male.textureCount;
+        diff = this.psnr[id1][id2];
+        // 两人物距离
+        let vec = [
+            ava1.position[0] - ava2.position[0], 
+            ava1.position[1] - ava2.position[1], 
+            ava1.position[2] - ava2.position[2]
+        ];
+        return 2 * diff / (Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]) *
+            (this.seatPositions.length - 1) * this.seatPositions.length);
+
+    }
+
+    computeLocal(ava1, ava2) {
+
+        let diff = 0;
+        for (let k = 1; k < 4; k++) { //三个部位
+            diff += Math.abs(ava1.bodyScale[k] - ava2.bodyScale[k]);
+        }
+        let vec = [
+            ava1.position[0] - ava2.position[0],
+            ava1.position[1] - ava2.position[1],
+            ava1.position[2] - ava2.position[2]
+        ];
+        return 2 * diff / (Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]) *
+            (this.seatPositions.length - 1) * this.seatPositions.length);
 
     }
 
@@ -261,7 +390,89 @@ class AvatarManager {
 
     }
 
-    createHost() {
+    async initHost() {
+
+        // 音频初始化
+        let audioBuffer = await this.loadAudio( this.filePath.host.voice );
+        const listener = new THREE.AudioListener();
+        this.camera.add( listener );
+        this.manager.host.audio = new THREE.Audio( listener );
+        this.manager.host.audio.setBuffer( audioBuffer );
+        this.manager.host.audio.play();
+
+        // host 模型
+        const gltf = await this.loadGLB( this.filePath.host.model );
+        let model = gltf.scene;
+        this.avatar.add( model );
+        model.position.set( 198, 9, -65 );
+        model.rotation.set( 0, -Math.PI / 2, 0 );
+        model.scale.set( 10, 10, 10 );
+        model.traverse( node => {
+            if ( node instanceof THREE.SkinnedMesh ) {
+                node.material.side = THREE.DoubleSide;
+                node.frustumCulled = false;
+            }
+        });
+
+        // 将模型绑定到动画混合器里面
+        let anima = gltf.animations;
+        this.manager.host.mixer[0] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[1] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[2] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[3] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[4] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[5] = new THREE.AnimationMixer( model );
+        this.manager.host.mixer[6] = new THREE.AnimationMixer( model );
+        // 同时将这个外部模型的动画全部绑定到动画混合器里面
+        this.manager.host.mixer[0].clipAction(anima[5]).play(); // b
+        this.manager.host.mixer[1].clipAction(anima[7]).play(); // d
+        this.manager.host.mixer[2].clipAction(anima[3]).play(); // a
+        this.manager.host.mixer[3].clipAction(anima[6]).play(); // e
+        this.manager.host.mixer[4].clipAction(anima[10]).play(); // u
+        this.manager.host.mixer[5].clipAction(anima[1]).play(); // static
+        this.manager.host.mixer[6].clipAction(anima[0]).play(); // static
+
+    }
+
+    playAudio() {
+
+        let scope = this;
+        let orderList = [1, 2, 3, 3, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 0, 3, 1, 2, 1, 4, 0, 3, 1, 2, 1, 4, 0, 3, 1, 2, 1, 4];
+        let timeList = 3845;
+        let moveNum = orderList.length; // 面部动作数量
+        let moveTime = timeList / moveNum; // 每个动作的时间
+        let upda = 0;
+        let pastTime = 0; // 第一次播放时, 音频会相对动画延迟
+        let clock = new THREE.Clock();
+
+        let boneArm = [];
+        let boneFace = [];
+        for (let i = 70; i < 120; i++) boneFace.push(i);
+        for (let i = 0; i < 216; i++) boneArm.push(i);
+
+        this.manager.host.audio.play();
+        animate();
+
+        function animate() {
+            if ( scope.manager.host.audio.isPlaying ) {
+                upda = getUpda();
+                scope.manager.host.mixer[5].update( 0.01, boneArm ); // 手臂
+                scope.manager.host.mixer[upda].update( 0.019, boneFace ); // 口型
+                pastTime += clock.getDelta() * 1000;
+                requestAnimationFrame( animate );
+            }
+            else {
+                scope.manager.host.mixer[6].update( 0.01 );
+                if ( scope.manager.host.cb ) scope.manager.host.cb();
+            }
+        }
+
+        function getUpda() {
+            let n = parseInt( pastTime / moveTime );
+            if ( n < moveNum ) upda = orderList[n];
+            else upda = orderList[moveNum - 1] // 播放过慢
+            return upda;
+        }
 
     }
 
@@ -421,6 +632,16 @@ class AvatarManager {
                 resolve( gltf );
             } );
         } );
+
+    }
+
+    loadAudio( path ) {
+
+        return new Promise( (resolve, reject) => {
+            new THREE.AudioLoader().load( path, buffer => {
+                resolve(buffer);
+            });
+        });
 
     }
 
