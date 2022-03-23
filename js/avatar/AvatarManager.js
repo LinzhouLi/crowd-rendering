@@ -240,6 +240,7 @@ class AvatarManager {
                                 let toSort = [];
                                 for (let index = 0; index < this.manager.config.male.textureCount; index++) {
                                     let tmp = { position: [], textureType: [0, 0, 0, 0] };
+                                    tmp.sex = "male";
                                     tmp.position = param.position;
                                     tmp.textureType[0] = index;
                                     toSort.push(tmp);
@@ -260,7 +261,8 @@ class AvatarManager {
                             if (candidate.length) {
                                 let toSort = [];
                                 for (let index = 0; index < this.manager.config.female.textureCount; index++) {
-                                    let tmp = { position: [], textureType: [0, 0, 0, 0] };
+                                    let tmp = {  position: [], textureType: [0, 0, 0, 0] };
+                                    tmp.sex = "female";
                                     tmp.position = param.position;
                                     tmp.textureType[0] = index;
                                     toSort.push(tmp);
