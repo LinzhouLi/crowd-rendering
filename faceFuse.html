@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>MEETING</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {overflow:hidden;}
+		</style>
+	</head>
+	<body style="margin: 0">
+		<script src="js/lib/threeJS/three.js"></script>
+		<script src="js/lib/threeJS/GLTFLoader.js"></script>
+
+
+
+		<script  type="module">
+			import { Main } from './js/Main.js';
+			import { SeatManager } from './js/avatar/SeatManager.js';
+			import { AvatarManager } from './js/avatar/AvatarManager.js';
+			import { RoomManager } from './js/room/RoomManager.js';
+			import { PreviewManager } from './js/lib/playerControl/PreviewManager.js';
+			//import { Net } from './js/simulate/Net.js';
+			import { Blur } from './js/Blur.js';
+			import { PlayerControl } from './js/lib/playerControl/PlayerControl.js';
+			import { InstancedGroup } from "./js/lib/instancedLib/InstancedGroup2.js";
+	
+			var myMain = new Main();
+			myMain.render();
+			window.camera = myMain.camera;
+			window.camera=myMain.camera;
+			window.camera.position.set(4.115504708949116,  113.08171101951831,  12.653520320835145)
+			window.camera.rotation.set(0.37710729074479143,  -0.03676550297186888,  0.01455712469827916)
+
+			window.camera.position.set(0.6646396417832814, 65.66882380645889, 120.73083009834701)
+			window.camera.rotation.set( -0.01819175530116693,  -0.009539749065600142,  -0.00017356129315742057)
+
+			new PlayerControl(myMain.camera); 
+
+			//开始加载人群
+			new THREE.FileLoader().load( "assets/texture/maleTextureHigh2.json", data => {
+            	    console.log(JSON.parse( data ))
+        	} );
+			function loadGLB( path ) {
+				return new Promise( (resolve, reject) => { 
+					const modelLoader = new THREE.GLTFLoader();
+					modelLoader.load( path, gltf => {
+						resolve( gltf );
+					} );
+				} );
+			}
+        	const maleModel = await loadGLB( "assets/model/avatar/male_high.glb" );
+        	const maleMesh = maleModel.scene.children[0].children[1];
+
+			
+			function getPosition2(path){
+				return new Promise( (resolve, reject) => { 
+					new THREE.FileLoader().load( path, data => {
+                		var position2=new THREE.BufferAttribute( new Float32Array( JSON.parse( data ) ) ,3,false); 
+                		resolve(position2)
+					})
+				})
+			}
+
+			const maleInstanceGroup = new InstancedGroup(
+            	1,
+            	maleMesh,
+            	"assets/animation/male_high_animations_long.json",
+            	"assets/texture/maleTextureHigh2.jpg",
+            	17,//贴图个数
+            	myMain.camera,
+				[await getPosition2("test_angry2.json"),await getPosition2("test_happy.json")]//position2
+        	);
+        	maleInstanceGroup.body = { // body
+                        head: [
+                            0.5322, 0.70654296875,
+                            1, 1
+                        ],
+                        hand: [
+                            0.20703125, 0.41259765625,
+                            0.7275390625, 0.57958984375
+                        ],
+                        bottom: [
+                            0, 0.6, 
+                            0.5322, 1
+                        ]
+                    }
+        	maleInstanceGroup.vertURL = "shader/highVertexShader2.vert";
+        	maleInstanceGroup.fragURL = "shader/highFragmentShader2.frag";
+			const maleInstanceMesh = await maleInstanceGroup.init();
+			setTimeout(() => {
+				console.log("maleMesh",maleMesh)
+				var geometry={}
+				geometry["position"]=[]
+				var arr=maleMesh.geometry.attributes.position.array
+				for(var i=0;i<arr.length/9;i++){
+					var pos=[]
+					for(var j=0;j<9;j++)
+						pos.push(arr[9*i+j])
+					geometry["position"].push(pos)
+				}
+				geometry["uv"]=[]
+				arr=maleMesh.geometry.attributes.uv.array
+				for(var i=0;i<arr.length/6;i++){
+					var uv=[]
+					for(var j=0;j<6;j++)
+						uv.push(arr[6*i+j])
+					geometry["uv"].push(uv)
+				}
+				console.log("geometry",geometry)
+				//download("geometry.json",geometry)
+				function download(name,data){
+    				var str=JSON.stringify(
+      					data//scope.viewPointData[b.myId] 
+      					, null, "\t")
+    				var link = document.createElement('a');
+    				link.style.display = 'none';
+    				document.body.appendChild(link);
+    				link.href = URL.createObjectURL(new Blob([str], { type: 'text/plain' }));
+    				link.download =name?name:"test.json";
+    				link.click();
+  				}
+
+				for (var index = 0; index < maleInstanceGroup.instanceCount; index++){
+						var x=index%100;
+						var y=Math.floor(index/100);
+						maleInstanceGroup.setPosition(index, [10*x,0,10*y]);
+						maleInstanceGroup.setScale(index, [100,100,100]);
+						maleInstanceGroup.setBodyScale(index, [1,1,1,1]);
+						maleInstanceGroup.setSpeed(index,0.001);
+						maleInstanceGroup.setAnimation(index,0);
+						var kkk=5
+						maleInstanceGroup.setTexture(index, [0,kkk,kkk,kkk])
+						maleInstanceGroup.setFaceTexture(index, [2,2,2,2])
+					}
+				maleInstanceGroup.update()
+				myMain.scene.add( maleInstanceMesh );
+				window.male=maleInstanceGroup
+			}, 1000);
+
+
+
+            //} );
+
+
+        	
+			//完成加载人群
+
+			//开始帧数统计
+			var tag = document.createElement('h1');
+			window.tag=tag;
+			tag.style.cssText =
+					'color:green;' +//文字颜色
+					'font-size:' + 20 + 'px;' +//文字大小
+					'font-weight:normal;' +
+					'position:fixed;' +//到窗体的位置
+					'left:' + 0 + 'px;' +//到部件左边距离
+					'top:' + 0 + 'px;'; //到部件右边 距离
+			document.body.appendChild(tag);
+			var frameIndex = 0, frameIndexPre = 0;
+			frameIndexUpdate();
+			setInterval(computeFPS, 1000);
+			function frameIndexUpdate() {
+				frameIndex++;
+				requestAnimationFrame(frameIndexUpdate);
+			}
+			function computeFPS() {
+				tag.innerHTML =(frameIndex - frameIndexPre);
+				//tag.innerHTML = "FPS:" + (frameIndex - frameIndexPre);
+				frameIndexPre = frameIndex;
+			}
+			//完成帧数统计
+
+			//开始添加时钟
+			window.myClock=0;
+			setInterval(function () {
+				window.myClock++;
+			},1)
+			//完成添加时钟
+			
+		</script>
+	</body>
+</html>
