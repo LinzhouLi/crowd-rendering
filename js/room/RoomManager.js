@@ -131,17 +131,17 @@ class RoomManager{
         const list = json.list;
         const mapsIndex = json.mapsIndex;
 
-        const videoMaterial = new THREE.MeshBasicMaterial();
-        let texture = new THREE.Texture();
-        texture.image = document.getElementById("bg");
-        texture.needsUpdate = true;
-        texture.flipY = false;
-        texture.wrapS = THREE.ClampToEdgeWrapping;
-        texture.wrapT = THREE.ClampToEdgeWrapping;
-        texture.minFilter = THREE.LinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        texture.format = THREE.RGBFormat;
-        videoMaterial.map = texture;
+        // const videoMaterial = new THREE.MeshBasicMaterial();
+        // let texture = new THREE.Texture();
+        // texture.image = document.getElementById("bg");
+        // texture.needsUpdate = true;
+        // texture.flipY = false;
+        // texture.wrapS = THREE.ClampToEdgeWrapping;
+        // texture.wrapT = THREE.ClampToEdgeWrapping;
+        // texture.minFilter = THREE.LinearFilter;
+        // texture.magFilter = THREE.LinearFilter;
+        // texture.format = THREE.RGBFormat;
+        // videoMaterial.map = texture;
 
         this.roomScene.traverse(node => { // 设置material
             if (node instanceof THREE.Mesh) {
@@ -149,16 +149,12 @@ class RoomManager{
                 node.receiveShadow = true; // 阴影
                 const textureIndex = parseInt(list[node.name]);
 
-                if (node.name === "室内-小显示器屏幕（非）"||
-                    node.name === "室内-大显示器屏幕（非）") {
-                    node.material = videoMaterial;
-                }
-                else if (mapsIndex[textureIndex]) {
+                if (mapsIndex[textureIndex]) {
                     this.loadTexture(`${this.url}ConferenceRoom${textureIndex}.jpg`).then(texture => {
                         texture.wrapS = THREE.RepeatWrapping;
                         texture.wrapT = THREE.RepeatWrapping;
                         node.material = new THREE.MeshBasicMaterial({ map: texture });
-                    })
+                    });
                 }
 
             }

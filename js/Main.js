@@ -165,7 +165,7 @@ class Main {
 
     render() {
 
-        let scope = this;
+        let scope = this, update = true;
         let frameIndex = 0, frameIndexPre = 0;
         const tag = document.getElementById("fps");
 
@@ -174,8 +174,13 @@ class Main {
         if (this.showFPS) this.fpsInterval = setInterval(computeFPS, 1000);
 
         function render() {
+            if ( window.drawFrustum ) {
+                scope.drawFrustum();
+                window.drawFrustum = false;
+                update = false;
+            }
             frameIndex++;
-            if( scope.avatarManager ) scope.avatarManager.updateLOD();
+            if( scope.avatarManager && update ) scope.avatarManager.updateLOD();
             if( scope.VR ) scope.stereoEffect.render(scope.scene, scope.camera);
             else scope.renderer.render(scope.scene, scope.camera);
             if ( window.innerWidth != scope.winWidth || window.innerHeight != scope.winHeight ) onResize();
@@ -197,6 +202,14 @@ class Main {
             scope.renderer.setSize( scope.winWidth, scope.winHeight );
         }
 
+    }
+
+    drawFrustum() {
+
+        let helper = new THREE.CameraHelper( this.camera );
+        helper.matrix = this.camera.matrixWorld.clone();
+        helper.matrixAutoUpdate = false;
+        this.scene.add( helper );
     }
 
     stopShowFPS() {
