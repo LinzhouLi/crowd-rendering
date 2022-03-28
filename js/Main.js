@@ -51,17 +51,17 @@ class Main {
         await this.avatarManager.createLowAvatar(); // 人物低模
         await this.avatarManager.createMediumAvatar(); // 人物中模
         await this.avatarManager.initHost(); // 主持人
-        await this.avatarManager.createHighAvatar(); // 人物高模
 
         if ( this.background.started ) manage(); // 开启预览
         else this.background.startFunc = manage;
 
+        await this.avatarManager.createHighAvatar(); // 人物高模
         await this.roomManager.loadNextResource(); // 会议室其他
         await this.roomManager.loadOtherResource(); // 会议室其他
 
         function manage() {
 
-            scope.preview();
+            // scope.preview();
 
         }
 

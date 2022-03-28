@@ -123,14 +123,6 @@ class RoomManager{
         this.roomScene = gltf.scene;
         this.room.add(this.roomScene);
 
-    }
-
-    async loadNextResource() {
-
-        const json = await this.loadJSON(`${this.url}test.json`);
-        const list = json.list;
-        const mapsIndex = json.mapsIndex;
-
         const videoMaterial = new THREE.MeshBasicMaterial();
         let texture = new THREE.Texture();
         texture.image = document.getElementById("bg");
@@ -144,22 +136,38 @@ class RoomManager{
         videoMaterial.map = texture;
 
         this.roomScene.traverse(node => { // 设置material
+
+            if (
+                node instanceof THREE.Mesh && (
+                node.name === "室内-小显示器屏幕（非）"||
+                node.name === "室内-大显示器屏幕（非）")
+            ) {
+                node.material = videoMaterial;
+            }
+
+        });
+
+    }
+
+    async loadNextResource() {
+
+        const json = await this.loadJSON(`${this.url}test.json`);
+        const list = json.list;
+        const mapsIndex = json.mapsIndex;
+
+        this.roomScene.traverse(node => { // 设置material
             if (node instanceof THREE.Mesh) {
 
                 node.receiveShadow = true; // 阴影
                 const textureIndex = parseInt(list[node.name]);
 
-                if (node.name === "室内-小显示器屏幕（非）"||
-                    node.name === "室内-大显示器屏幕（非）") {
-                    node.material = videoMaterial;
+                if (mapsIndex[textureIndex]) {
+                    this.loadTexture(`${this.url}ConferenceRoom${textureIndex}.jpg`).then(texture => {
+                        texture.wrapS = THREE.RepeatWrapping;
+                        texture.wrapT = THREE.RepeatWrapping;
+                        node.material = new THREE.MeshBasicMaterial({ map: texture });
+                    })
                 }
-                // else if (mapsIndex[textureIndex]) {
-                //     this.loadTexture(`${this.url}ConferenceRoom${textureIndex}.jpg`).then(texture => {
-                //         texture.wrapS = THREE.RepeatWrapping;
-                //         texture.wrapT = THREE.RepeatWrapping;
-                //         node.material = new THREE.MeshBasicMaterial({ map: texture });
-                //     })
-                // }
 
             }
         });
