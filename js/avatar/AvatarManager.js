@@ -78,7 +78,7 @@ class AvatarManager {
 
         this.psnr = await this.loadJSON("assets/PSNR.json"); // 峰值信噪比
         this.initFilePath();
-        this.initAvatarParams();
+        this.initAvatarParamsGreedly();
         this.computeDisp();
 
     }
@@ -88,8 +88,8 @@ class AvatarManager {
         this.filePath = {
 
             host: {
-                voice: "assets/model/host/voice.m4a",
-                model: "assets/model/host/model.glb"
+                voice: "assets/model/host/voice.mp3",
+                model: "assets/model/host/model1.glb"
             },
 
             shader: {
@@ -157,7 +157,6 @@ class AvatarManager {
                     Math.floor( Math.random() * this.manager.config.male.textureCount ),
                     Math.floor( Math.random() * this.manager.config.male.textureCount )
                 ];
-                param.sex = "male";
             }
             else { // 以0.5的概率生成女性
                 param.animationType = Math.floor( Math.random() * this.manager.config.female.animationCount );
@@ -167,7 +166,6 @@ class AvatarManager {
                     Math.floor( Math.random() * this.manager.config.female.textureCount ),
                     Math.floor( Math.random() * this.manager.config.female.textureCount )
                 ];
-                param.sex = "female";
             }
             this.manager.params.push( param );
         }
@@ -177,7 +175,7 @@ class AvatarManager {
     initAvatarParamsGreedly() {
 
         const rowNum = [24, 34, 28], col = 26;
-        for (let l = 0; l < 3; l++) {
+        for (let l = 0; l < rowNum.length; l++) {
             const row = rowNum[l];
             for (let k = 0; k < 3; k++) {
                 let bais = k * row * col;
@@ -284,7 +282,7 @@ class AvatarManager {
        let texSum = 0;
        for (let i = 0; i < this.seatPositions.length; i++) {
            for (let j = i+1; j < this.seatPositions.length; j++) {
-               texSum += this.computePSNR(this.manager.params[i],this.manager.params[j]);
+               texSum += this.computePSNR(this.manager.params[i], this.manager.params[j]);
            }
        }
        console.log("diff_texture: ", texSum);

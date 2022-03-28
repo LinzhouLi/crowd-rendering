@@ -123,17 +123,25 @@ class RoomManager{
         this.roomScene = gltf.scene;
         this.room.add(this.roomScene);
 
-        const videoMaterial = new THREE.MeshBasicMaterial();
-        let texture = new THREE.Texture();
-        texture.image = document.getElementById("bg");
-        texture.needsUpdate = true;
-        texture.flipY = false;
-        texture.wrapS = THREE.ClampToEdgeWrapping;
-        texture.wrapT = THREE.ClampToEdgeWrapping;
-        texture.minFilter = THREE.LinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        texture.format = THREE.RGBFormat;
-        videoMaterial.map = texture;
+    }
+
+    async loadNextResource() {
+
+        const json = await this.loadJSON(`${this.url}test.json`);
+        const list = json.list;
+        const mapsIndex = json.mapsIndex;
+
+        // const videoMaterial = new THREE.MeshBasicMaterial();
+        // let texture = new THREE.Texture();
+        // texture.image = document.getElementById("bg");
+        // texture.needsUpdate = true;
+        // texture.flipY = false;
+        // texture.wrapS = THREE.ClampToEdgeWrapping;
+        // texture.wrapT = THREE.ClampToEdgeWrapping;
+        // texture.minFilter = THREE.LinearFilter;
+        // texture.magFilter = THREE.LinearFilter;
+        // texture.format = THREE.RGBFormat;
+        // videoMaterial.map = texture;
 
         this.roomScene.traverse(node => { // 设置material
 
@@ -166,7 +174,7 @@ class RoomManager{
                         texture.wrapS = THREE.RepeatWrapping;
                         texture.wrapT = THREE.RepeatWrapping;
                         node.material = new THREE.MeshBasicMaterial({ map: texture });
-                    })
+                    });
                 }
 
             }
