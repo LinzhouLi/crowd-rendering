@@ -89,7 +89,7 @@ class AvatarManager {
 
             host: {
                 voice: "assets/model/host/voice.mp3",
-                model: "assets/model/host/model1.glb"
+                model: "assets/model/host/host.glb"
             },
 
             shader: {
@@ -403,7 +403,7 @@ class AvatarManager {
         let model = gltf.scene;
         this.avatar.add( model );
         model.position.set( 198, 9, -65 );
-        model.rotation.set( 0, -Math.PI / 2, 0 );
+        model.rotation.set( Math.PI, Math.PI / 2, 0 );
         model.scale.set( 10, 10, 10 );
         model.traverse( node => {
             if ( node instanceof THREE.SkinnedMesh ) {
