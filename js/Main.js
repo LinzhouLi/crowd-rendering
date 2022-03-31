@@ -61,7 +61,7 @@ class Main {
 
         function manage() {
 
-            // scope.preview();
+            scope.preview();
 
         }
 
@@ -91,13 +91,13 @@ class Main {
         ];
 
         let funcArr = new Array( movePath.length );
-        funcArr[3] = function() { scope.avatarManager.playAudio(); }
-        funcArr[ movePath.length - 1 ] = function() {
-            if ( scope.avatarManager.manager.host.audio.isPlaying ) {
-                scope.avatarManager.manager.host.cb = scope.roomManager.playVideo;
-            }
-            else scope.roomManager.playVideo();
-        }
+        funcArr[5] = function() { scope.avatarManager.playAudio(); }
+        // funcArr[ movePath.length - 1 ] = function() {
+        //     if ( scope.avatarManager.manager.host.audio.isPlaying ) {
+        //         scope.avatarManager.manager.host.cb = scope.roomManager.playVideo;
+        //     }
+        //     else scope.roomManager.playVideo();
+        // }
         new MoveManager(this.camera, movePath, funcArr);
 
     }
