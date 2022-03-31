@@ -129,8 +129,8 @@ class InstancedGroup {
         updateAnimation();
 
         function updateAnimation() {
-            let time = Math.floor(10 * scope.clock.getElapsedTime());
-            uniforms.time = { value: time % 60000 };
+            let time = scope.clock.getElapsedTime();
+            uniforms.time = { value: time };
             uniforms.cameraPosition = { value: scope.camera.position };
             requestAnimationFrame(updateAnimation);
         }

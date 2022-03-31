@@ -78,7 +78,7 @@ class AvatarManager {
 
         this.psnr = await this.loadJSON("assets/PSNR.json"); // 峰值信噪比
         this.initFilePath();
-        this.initAvatarParamsGreedly();
+        this.initAvatarParams();
         this.computeDisp();
 
     }
@@ -138,7 +138,7 @@ class AvatarManager {
             let param = {
                 position: this.seatPositions[i],
                 scale: [ 2.6, 2.6, 2.6 ],
-                animationSpeed: 2.5 + Math.random() * 0.5,
+                animationSpeed: 25,
                 LOD: -1,
                 textureType: [0, 0, 0, 0],
                 animationType: 0,
@@ -157,6 +157,7 @@ class AvatarManager {
                     Math.floor( Math.random() * this.manager.config.male.textureCount ),
                     Math.floor( Math.random() * this.manager.config.male.textureCount )
                 ];
+                param.sex = "male";
             }
             else { // 以0.5的概率生成女性
                 param.animationType = Math.floor( Math.random() * this.manager.config.female.animationCount );
@@ -166,6 +167,7 @@ class AvatarManager {
                     Math.floor( Math.random() * this.manager.config.female.textureCount ),
                     Math.floor( Math.random() * this.manager.config.female.textureCount )
                 ];
+                param.sex = "female";
             }
             this.manager.params.push( param );
         }
