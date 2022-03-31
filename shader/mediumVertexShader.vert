@@ -2,7 +2,7 @@
 
 precision highp float;
 uniform sampler2D animationTexture;
-uniform float boneCount, animationFrameCount, animationTextureLength;
+uniform float boneCount, animationFrameCount, animationTextureLength, animationCount;
 uniform mat4 modelViewMatrix, projectionMatrix;
 uniform float time;
 // uniform vec3 cameraPosition;
@@ -12,7 +12,7 @@ in vec2 inUV;
 in vec3 normal;
 in vec4 skinIndex, skinWeight; // 仅使用了绑定的第一个骨骼
 in vec3 mcol0, mcol1, mcol2, mcol3;
-in float speed;
+in float speed, animationStartTime;
 in float animationIndex; // 动画类型
 in vec4 textureIndex;
 
@@ -44,8 +44,18 @@ mat4 computeAnimationMatrix(float boneIndex) {
         );
     }
 
-    float frameIndex = float(int(time * speed) % int(animationFrameCount));
-    float startPos = 4. * (boneCount * (animationIndex * animationFrameCount + frameIndex) + boneIndex);
+    float frameIndex = float(int((time - animationStartTime) * speed) % int(animationFrameCount));
+    float startPos = 4. * (boneCount * ((animationIndex - 1.) * animationFrameCount + frameIndex) + boneIndex);
+    if ( animationIndex < 0.5 ) {
+        startPos = 4. * (boneCount * (animationCount * animationFrameCount - 1.) + boneIndex);
+        // return mat4(
+        //     1., 0., 0., 0.,
+        //     0., 1., 0., 0.,
+        //     0., 0., 1., 0.,
+        //     0., 0., 0., 1.
+        // );
+    }
+    // else startPos = 4. * (boneCount * ((animationIndex - 1.) * animationFrameCount + frameIndex) + boneIndex);
     return mat4(
         vec4(getAnimationItem(startPos+0.), 0.),
         vec4(getAnimationItem(startPos+1.), 0.),

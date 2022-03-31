@@ -98,7 +98,7 @@ void main() {
 
     Material material = Material(
         computeTextureColor().rgb,
-        0.6, 0.3, 0.2, // 三种光照比例 环境光:漫反射:高光
+        0.7, 0.3, 0.2, // 三种光照比例 环境光:漫反射:高光
         16. // 粗糙度  其值越大, 高光区域越小
     );
     

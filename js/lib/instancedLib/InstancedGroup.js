@@ -6,7 +6,8 @@ class InstancedGroup {
         animationUrl,
         textureUrl,
         textureCount,
-        camera
+        camera,
+        clock
     ) {
 
         // this.mesh;
@@ -16,8 +17,9 @@ class InstancedGroup {
         this.textureUrl = textureUrl;
         this.textureCount = textureCount;
         this.camera = camera;
+        this.uniforms;
 
-        this.clock = new THREE.Clock();
+        this.clock = clock;
         this.ifAnimated = animationUrl;
         this.dummy = new THREE.Object3D();
 
@@ -28,6 +30,7 @@ class InstancedGroup {
         this.mcol3;
 
         this.speed; // 动画速度
+        this.animationStartTime;
         this.animationType; // 动画类型
         this.textureType; // 身体贴图类型 vec4
         this.bodyScale; // 身体各部位缩放比例
@@ -58,6 +61,7 @@ class InstancedGroup {
         if (this.ifAnimated) {
             this.speed = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
             this.animationType = new THREE.InstancedBufferAttribute(new Uint8Array(this.instanceCount), 1);
+            this.animationStartTime = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
             this.bodyScale = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 4), 4);
         }
 
@@ -88,7 +92,7 @@ class InstancedGroup {
         material.vertexShader = vertexShader;
         material.fragmentShader = fragmentShader;
 
-        let uniforms = {
+        this.uniforms = {
             textureCount: { value: this.textureCount },
             textureData: { value: textureData },
             headUV: { value: new THREE.Vector4(...this.body.head) },
@@ -96,14 +100,15 @@ class InstancedGroup {
             bottomUV: { value: new THREE.Vector4(...this.body.bottom) }
         };
         if (this.ifAnimated) {
-            uniforms.time = { value: 0 };
-            uniforms.boneCount = { value: 0 };
-            uniforms.animationFrameCount = { value: 0 };
-            uniforms.animationTexture = { value: new THREE.DataTexture(new Float32Array([0,0,0]), 1, 1, THREE.RGBFormat, THREE.FloatType) };
-            uniforms.animationTextureLength = { value: 0 };
-            this.initAnimation(uniforms); // 异步加载动画数据
+            this.uniforms.time = { value: 0 };
+            this.uniforms.boneCount = { value: 0 };
+            this.uniforms.animationCount = { value: 0 };
+            this.uniforms.animationFrameCount = { value: 0 };
+            this.uniforms.animationTexture = { value: new THREE.DataTexture(new Float32Array([0,0,0]), 1, 1, THREE.RGBFormat, THREE.FloatType) };
+            this.uniforms.animationTextureLength = { value: 0 };
+            this.initAnimation(this.uniforms); // 异步加载动画数据
         }
-        material.uniforms = uniforms;
+        material.uniforms = this.uniforms;
 
         return material;
 
@@ -120,6 +125,7 @@ class InstancedGroup {
         uniforms.animationTexture.value.dispose();
         uniforms.time = { value: 0 };
         uniforms.boneCount = { value: boneCount };
+        uniforms.animationCount = { value: animations.config.length };
         uniforms.animationFrameCount = { value: animations.config[0] / boneCount / 12 };
         uniforms.animationTexture = { value: this.array2Texture(animationData, animationTextureLength) }; // 将动画数据保存为图片Texture格式
         uniforms.animationTextureLength = { value: animationTextureLength };
@@ -149,6 +155,7 @@ class InstancedGroup {
             geometry.setAttribute('skinWeight', this.originMesh.geometry.attributes.skinWeight);
             geometry.setAttribute('speed', this.speed);
             geometry.setAttribute('animationIndex', this.animationType);
+            geometry.setAttribute('animationStartTime', this.animationStartTime);
             geometry.setAttribute('bodyScale', this.bodyScale);
         }
 
@@ -350,10 +357,11 @@ class InstancedGroup {
 
     }
 
-    setAnimation(avatarIndex, type) { // 设置动画类型
+    setAnimation(avatarIndex, type, offset) { // 设置动画类型
 
         if (this.ifAnimated) {
             this.animationType.array[avatarIndex] = type;
+            this.animationStartTime.array[avatarIndex] = offset;
         }
 
     }
@@ -375,6 +383,7 @@ class InstancedGroup {
         this.textureType.needsUpdate = true;
         if (this.ifAnimated) {
             this.animationType.needsUpdate = true;
+            this.animationStartTime.needsUpdate = true;
             this.speed.needsUpdate = true;
             this.bodyScale.needsUpdate = true;
         }

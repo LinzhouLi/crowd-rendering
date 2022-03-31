@@ -2,7 +2,7 @@
 
 precision highp float;
 uniform sampler2D animationTexture;
-uniform float boneCount, animationFrameCount, animationTextureLength;
+uniform float boneCount, animationFrameCount, animationTextureLength, animationCount;
 uniform mat4 modelViewMatrix, projectionMatrix;
 uniform float time;
 
@@ -11,7 +11,7 @@ in vec2 inUV;
 in vec3 normal;
 in vec4 skinIndex, skinWeight; // 仅使用了绑定的第一个骨骼
 in vec3 mcol0, mcol1, mcol2, mcol3;
-in float speed;
+in float speed, animationStartTime;
 in float animationIndex; // 动画类型
 in vec4 textureIndex;
 in vec4 bodyScale; // 0:身体 1:头部 2:上肢 3:下肢
@@ -59,7 +59,18 @@ vec3 getAnimationItem(float index) { // 从texture中提取矩阵元素
 
 mat4 computeAnimationMatrix(float boneIndex, float frameIndex) { // 计算一个骨骼的变换矩阵
 
-    float startPos = 4. * (boneCount * (animationIndex * animationFrameCount + frameIndex) + boneIndex);
+    float startPos = 4. * (boneCount * ((animationIndex - 1.) * animationFrameCount + frameIndex) + boneIndex);
+    if ( animationIndex < 0.5 ) {
+        // startPos = 4. * (boneCount * ((animationCount-1.) * animationFrameCount ) + boneIndex);
+        startPos = 4. * (boneCount * ((animationCount - 2.) * animationFrameCount) + boneIndex);
+        // return mat4(
+        //     1., 0., 0., 0.,
+        //     0., 1., 0., 0.,
+        //     0., 0., 1., 0.,
+        //     0., 0., 0., 1.
+        // );
+    }
+    // else startPos = 4. * (boneCount * ((animationIndex - 1.) * animationFrameCount + frameIndex) + boneIndex);
     return mat4(
         vec4(getAnimationItem(startPos + 0.), 0.),
         vec4(getAnimationItem(startPos + 1.), 0.),
@@ -85,8 +96,8 @@ vec3 vertexBlending(vec3 position, float frameIndex) { // 动画形变, 计算4�
 
 vec3 frameInterpolation(vec3 position) { // 点坐标插值, 考虑优化:变换矩阵插值
 
-    float m = floor(time * speed / animationFrameCount);
-    float temp = time * speed - m * animationFrameCount;
+    float m = floor((time - animationStartTime) * speed / animationFrameCount);
+    float temp = (time - animationStartTime) * speed - m * animationFrameCount;
     float frameIndex1 = floor(temp);
     float weight = temp - frameIndex1; // 插值权重
     float frameIndex2 = float(int(frameIndex1 + 1.) % int(animationFrameCount));

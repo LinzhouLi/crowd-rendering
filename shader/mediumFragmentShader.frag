@@ -55,6 +55,6 @@ void main() {
 
     vec3 diffuse = textureColor * max(0., dot(lightDirection, normalize(outNormal)));
 
-    outColor = vec4(diffuse * 0.4 + textureColor * 0.6, 1.);
+    outColor = vec4(diffuse * 0.4 + textureColor * 0.7, 1.);
 
 }
