@@ -61,16 +61,8 @@ mat4 computeAnimationMatrix(float boneIndex, float frameIndex) { // 计算一个
 
     float startPos = 4. * (boneCount * ((animationIndex - 1.) * animationFrameCount + frameIndex) + boneIndex);
     if ( animationIndex < 0.5 ) {
-        // startPos = 4. * (boneCount * ((animationCount-1.) * animationFrameCount ) + boneIndex);
         startPos = 4. * (boneCount * ((animationCount - 2.) * animationFrameCount) + boneIndex);
-        // return mat4(
-        //     1., 0., 0., 0.,
-        //     0., 1., 0., 0.,
-        //     0., 0., 1., 0.,
-        //     0., 0., 0., 1.
-        // );
     }
-    // else startPos = 4. * (boneCount * ((animationIndex - 1.) * animationFrameCount + frameIndex) + boneIndex);
     return mat4(
         vec4(getAnimationItem(startPos + 0.), 0.),
         vec4(getAnimationItem(startPos + 1.), 0.),

@@ -1,0 +1,11 @@
+Hello, everyone! Welcome to Nanjing, China. 
+This is the 35th International Conference on Computer Animation and Social Agents.  
+CASA is the oldest international conference in computer animation and social agents in the world. 
+It was founded in Geneva in 1988 under the name of Computer Animation.  
+CASA aims to provide a premier interdisciplinary platform for researchers, practitioners, and educators 
+to present and discuss the most recent innovations, trends, and concerns 
+as well as practical challenges encountered and solutions adopted 
+in the fields of Computer Animation and Social Agents. 
+CASA 2022 will provide a great opportunity to interact with leading experts, 
+share your own work, and educate yourself 
+through exposure to the research of your peers from around the world.

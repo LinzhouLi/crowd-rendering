@@ -2,6 +2,7 @@
 
 precision highp float;
 uniform sampler2D textureData;
+uniform sampler2D lightMapData;
 uniform float textureCount;
 uniform vec3 cameraPosition;
 uniform vec4 headUV;
@@ -15,6 +16,8 @@ in vec3 outPosition;
 
 out vec4 fragColor;
 
+int bodyPart; // 身体部分
+
 struct PointLight {
     vec3 position;
     vec3 diffuseColor;
@@ -27,21 +30,21 @@ struct Material {
     float gloss;
 };
 
-float getTextureIndex(float u, float v) { // 身体各部位贴图
+int getBodyPart(float u, float v) { // 身体各部位贴图
 
     if (
         (u - headUV[0]) * (headUV[2] - u) > 0. &&
         (v - headUV[1]) * (headUV[3] - v) > 0.
-    ) { return outTextureIndex[1]; }
+    ) { return 1; }
     if (
         (u - handUV[0]) * (handUV[2] - u) > 0. &&
         (v - handUV[1]) * (handUV[3] - v) > 0.
-    ) { return outTextureIndex[1]; }
+    ) { return 1; }
     if (
         (u - bottomUV[0]) * (bottomUV[2] - u) > 0. &&
         (v - bottomUV[1]) * (bottomUV[3] - v) > 0.
-    ) { return outTextureIndex[2]; }
-    else { return outTextureIndex[0]; }
+    ) { return 2; }
+    else { return 0; }
 
 }
 
@@ -52,7 +55,8 @@ vec4 computeTextureColor() { // 贴图颜色
     if (u > 0.5) u = 1. - u; // 对称
     if (u > 0.4985) u = 0.4985; // 去除中缝
     u = u * 2.;
-    float textureIndex = getTextureIndex(u, v);
+    bodyPart = getBodyPart(u, v);
+    float textureIndex = outTextureIndex[bodyPart];
     u = (u + textureIndex) / textureCount;
     vec4 color = texture( textureData, vec2(u, v) );
     return color;
@@ -77,6 +81,13 @@ vec3 blinnPhong( // 光照模型
     // Diffuse
     vec3 diffuse = light.diffuseColor * material.textureColor * max(0., dot(lightDirection, normalDirection));
 
+    vec3 lightmapValue;
+    if (bodyPart != 1){
+        lightmapValue = texture( lightMapData, outUV ).rgb; // lightMap
+        ambient *= lightmapValue;
+        diffuse *= lightmapValue;
+    }
+
     // Specular  公式: (n·(v+l)/|v+l|)^g
     float specular = pow(max(0., dot(normalize(viewDirection + lightDirection), normalDirection)), material.gloss);
 
@@ -98,7 +109,7 @@ void main() {
 
     Material material = Material(
         computeTextureColor().rgb,
-        0.7, 0.3, 0.2, // 三种光照比例 环境光:漫反射:高光
+        0.7, 0.4, 0.25, // 三种光照比例 环境光:漫反射:高光
         16. // 粗糙度  其值越大, 高光区域越小
     );
     

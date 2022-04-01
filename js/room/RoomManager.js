@@ -131,38 +131,6 @@ class RoomManager{
         const list = json.list;
         const mapsIndex = json.mapsIndex;
 
-        // const videoMaterial = new THREE.MeshBasicMaterial();
-        // let texture = new THREE.Texture();
-        // texture.image = document.getElementById("bg");
-        // texture.needsUpdate = true;
-        // texture.flipY = false;
-        // texture.wrapS = THREE.ClampToEdgeWrapping;
-        // texture.wrapT = THREE.ClampToEdgeWrapping;
-        // texture.minFilter = THREE.LinearFilter;
-        // texture.magFilter = THREE.LinearFilter;
-        // texture.format = THREE.RGBFormat;
-        // videoMaterial.map = texture;
-
-        this.roomScene.traverse(node => { // 设置material
-
-            if (
-                node instanceof THREE.Mesh && (
-                node.name === "室内-小显示器屏幕（非）"||
-                node.name === "室内-大显示器屏幕（非）")
-            ) {
-                node.material = videoMaterial;
-            }
-
-        });
-
-    }
-
-    async loadNextResource() {
-
-        const json = await this.loadJSON(`${this.url}test.json`);
-        const list = json.list;
-        const mapsIndex = json.mapsIndex;
-
         this.roomScene.traverse(node => { // 设置material
             if (node instanceof THREE.Mesh) {
 

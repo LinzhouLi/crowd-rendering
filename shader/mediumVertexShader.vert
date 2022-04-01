@@ -35,27 +35,11 @@ vec3 getAnimationItem(float index) { // 从texture中提取矩阵元素
 
 mat4 computeAnimationMatrix(float boneIndex) {
 
-    if ( animationTextureLength < 0.5) { // 动画未加载
-        return mat4(
-            1., 0., 0., 0.,
-            0., 1., 0., 0.,
-            0., 0., 1., 0.,
-            0., 0., 0., 1.
-        );
-    }
-
     float frameIndex = float(int((time - animationStartTime) * speed) % int(animationFrameCount));
     float startPos = 4. * (boneCount * ((animationIndex - 1.) * animationFrameCount + frameIndex) + boneIndex);
     if ( animationIndex < 0.5 ) {
-        startPos = 4. * (boneCount * (animationCount * animationFrameCount - 1.) + boneIndex);
-        // return mat4(
-        //     1., 0., 0., 0.,
-        //     0., 1., 0., 0.,
-        //     0., 0., 1., 0.,
-        //     0., 0., 0., 1.
-        // );
+        startPos = 4. * (boneCount * ((animationCount - 2.) * animationFrameCount) + boneIndex);
     }
-    // else startPos = 4. * (boneCount * ((animationIndex - 1.) * animationFrameCount + frameIndex) + boneIndex);
     return mat4(
         vec4(getAnimationItem(startPos+0.), 0.),
         vec4(getAnimationItem(startPos+1.), 0.),

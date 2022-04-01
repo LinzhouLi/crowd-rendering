@@ -5,6 +5,8 @@ class SeatManager {
         this.positions = [];
         this.chairs = new THREE.Object3D();
         this.url = "assets/model/chair.glb";
+        this.lightmapUpperURL = "assets/lightmap/Lightmap_Chair_Upper.jpg";
+        this.lightmapLowerURL = "assets/lightmap/Lightmap_Chair_Lower.jpg";
         let k, i, j;
         // 一楼前部
         for(k = 0; k < 3; k++) // 三部分
@@ -39,6 +41,9 @@ class SeatManager {
     async create() {
 
         const gltf = await this.loadGLB(this.url);
+        
+        let lightmapUpper = await this.loadTexture(this.lightmapUpperURL);
+        let lightmapLower = await this.loadTexture(this.lightmapLowerURL);
 
         let obj = gltf.scene.children[0];
 
@@ -70,6 +75,12 @@ class SeatManager {
         mesh2.castShadow = true; // 阴影
         mesh2.receiveShadow = true;
 
+        material1.aoMap = lightmapLower;
+        material1.aoMapIntensity = 0.8;
+        material2.aoMap = lightmapUpper;
+        material2.aoMapIntensity = 0.8;
+
+
         this.chairs.add(mesh1);
         this.chairs.add(mesh2);
 
@@ -86,6 +97,22 @@ class SeatManager {
             } );
         } );
 
+    }
+
+    loadTexture(path) {
+
+        return new Promise((resolve, reject)=> {
+            new THREE.TextureLoader().load(
+                path,
+                texture => { // onLoad
+                    texture.flipY = false;
+                    resolve(texture);
+                }, 
+                null, // onProgress
+                error => reject(error) // onError
+            )
+        });
+        
     }
 
 }

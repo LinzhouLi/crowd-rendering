@@ -80,7 +80,8 @@ class AvatarManager {
 
         this.psnr = await this.loadJSON("assets/PSNR.json"); // 峰值信噪比
         this.initFilePath();
-        this.initAvatarParams();
+        this.initAvatarParamsGreedly();
+        this.adjustParam();
         this.computeDisp();
 
     }
@@ -90,7 +91,7 @@ class AvatarManager {
         this.filePath = {
 
             host: {
-                voice: "assets/model/host/voice.mp3",
+                voice: "assets/model/host/voice_long.mp3",
                 model: "assets/model/host/host.glb"
             },
 
@@ -104,7 +105,8 @@ class AvatarManager {
             },
 
             male: {
-                // 资源路径设置
+                lightMapPath: "assets/lightmap/Lightmap_Male.jpg",
+
                 highModelPath: "assets/model/avatar/male_high_new.glb",
                 highAnimationPath: "assets/animation/male_high_animations_new.json",
                 highTexturePath: "assets/texture/maleTextureHigh.jpg",
@@ -118,6 +120,8 @@ class AvatarManager {
             },
 
             female: {
+                lightMapPath: "assets/lightmap/Lightmap_Female.jpg",
+
                 highModelPath: "assets/model/avatar/female_high_new.glb",
                 highAnimationPath: "assets/animation/female_high_animations_new.json",
                 highTexturePath: "assets/texture/femaleTextureHigh.jpg",
@@ -162,8 +166,6 @@ class AvatarManager {
                     Math.floor( Math.random() * this.manager.config.male.textureCount ),
                     Math.floor( Math.random() * this.manager.config.male.textureCount )
                 ];
-                if (param.textureType[1] == 11 || param.textureType[1] == 13) param.textureType[1] = 12; // 去掉短袖短裤
-                if (param.textureType[2] == 13) param.textureType[2] = 12;
                 param.sex = "male";
             }
             else { // 以0.5的概率生成女性
@@ -174,11 +176,25 @@ class AvatarManager {
                     Math.floor( Math.random() * this.manager.config.female.textureCount ),
                     Math.floor( Math.random() * this.manager.config.female.textureCount )
                 ];
-                if (param.textureType[1] == 14) param.textureType[1] = 13; // 去掉短袖短裤
-                if (param.textureType[2] == 3 || param.textureType[2] == 4 || param.textureType[2] == 7 || param.textureType[2] == 8) param.textureType[2] = 13;
                 param.sex = "female";
             }
             this.manager.params.push( param );
+        }
+
+    }
+
+    adjustParam() {
+
+        for (let i = 0; i < this.manager.params.length; i++) {
+            let param = this.manager.params[i]
+            if (param.sex == "male") {
+                if (param.textureType[0] == 6 || param.textureType[0] == 11 || param.textureType[0] == 13) param.textureType[0]--; // 去掉短袖短裤
+                if (param.textureType[2] == 13) param.textureType[2]--;
+            }
+            else if (param.sex == "female") {
+                if (param.textureType[0] == 14) param.textureType[0]--; // 去掉短袖短裤
+                if (param.textureType[2] == 3 || param.textureType[2] == 4 || param.textureType[2] == 7 || param.textureType[2] == 8) param.textureType[2]--;
+            }
         }
 
     }
@@ -187,13 +203,13 @@ class AvatarManager {
 
         if (time > param.animationEndTime) {
             let delta;
-            if (Math.random() < 0.6) { // 0.6的概率静止
+            if (Math.random() < 0.8) { // 0.8的概率静止
                 param.animationType = 0;
-                delta = (Math.floor(Math.random() * this.manager.config.animationFrameCount) + 5) / param.animationSpeed;
+                delta = (Math.floor(Math.random() * 50) + 15) / param.animationSpeed;
             }
             else {
                 param.animationType = Math.floor( Math.random() * this.manager.config[param.sex].animationCount ) + 1;
-                if (param.animationType == 7) param.animationType = 8; // 去掉第七个动作
+                if (param.sex == "male" && (param.animationType == 7 || param.animationType == 1)) param.animationType = 2; // 去掉第七个动作
                 delta = this.manager.config.animationFrameCount / (1.2 * param.animationSpeed);
             }
             param.animationStartTime = time;
@@ -225,10 +241,12 @@ class AvatarManager {
                         let param = {
                             position: this.seatPositions[id],
                             scale: [ 2.6, 2.6, 2.6 ],
-                            animationSpeed: 4 + Math.random() * 1,
+                            animationSpeed: 10,
                             LOD: -1,
                             textureType: [0, 0, 0, 0],
                             animationType: 0,
+                            animationStartTime: 0,
+                            animationEndTime: 0,
                             bodyScale: [
                                 1,
                                 0.9 + 0.2 * Math.random(),
@@ -426,7 +444,6 @@ class AvatarManager {
         this.camera.add( listener );
         this.manager.host.audio = new THREE.Audio( listener );
         this.manager.host.audio.setBuffer( audioBuffer );
-        this.manager.host.audio.play();
 
         // host 模型
         const gltf = await this.loadGLB( this.filePath.host.model );
@@ -515,6 +532,7 @@ class AvatarManager {
             maleMesh,
             false,
             this.filePath.male.lowTexturePath,
+            false,
             this.manager.config.male.textureCount,
             this.camera,
             this.clock
@@ -535,6 +553,7 @@ class AvatarManager {
             femaleMesh,
             false,
             this.filePath.female.lowTexturePath,
+            false,
             this.manager.config.female.textureCount,
             this.camera,
             this.clock
@@ -561,6 +580,7 @@ class AvatarManager {
             maleMesh,
             this.filePath.male.mediumAnimationPath,
             this.filePath.male.mediumTexturePath,
+            this.filePath.male.lightMapPath,
             this.manager.config.male.textureCount,
             this.camera,
             this.clock
@@ -582,6 +602,7 @@ class AvatarManager {
             femaleMesh,
             this.filePath.female.mediumAnimationPath,
             this.filePath.female.mediumTexturePath,
+            this.filePath.female.lightMapPath,
             this.manager.config.female.textureCount,
             this.camera,
             this.clock
@@ -609,9 +630,10 @@ class AvatarManager {
             maleMesh,
             this.filePath.male.highAnimationPath,
             this.filePath.male.highTexturePath,
+            this.filePath.male.lightMapPath,
             this.manager.config.male.textureCount,
             this.camera,
-            this.clock
+            this.clock,
         );
         maleInstanceGroup.body = this.manager.config.male.body;
         maleInstanceGroup.vertURL = this.filePath.shader.highVertexShader;
@@ -630,6 +652,7 @@ class AvatarManager {
             femaleMesh,
             this.filePath.female.highAnimationPath,
             this.filePath.female.highTexturePath,
+            this.filePath.female.lightMapPath,
             this.manager.config.female.textureCount,
             this.camera,
             this.clock

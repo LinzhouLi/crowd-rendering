@@ -2,7 +2,9 @@
 
 precision highp float;
 uniform sampler2D textureData;
+uniform sampler2D lightMapData;
 uniform float textureCount;
+uniform vec3 cameraPosition;
 uniform vec4 headUV;
 uniform vec4 handUV;
 uniform vec4 bottomUV;
@@ -12,7 +14,19 @@ in vec2 outUV;
 in vec3 outNormal;
 in vec3 outPosition;
 
-out vec4 outColor;
+out vec4 fragColor;
+
+struct PointLight {
+    vec3 position;
+    vec3 diffuseColor;
+    vec3 ambientColor;
+};
+
+struct Material {
+    vec3 textureColor;
+    float kAmbient, kDiffuse, kSpecular; // 环境光, 漫反射, 高光 的比例
+    float gloss;
+};
 
 float getTextureIndex(float u, float v) {
 
@@ -46,15 +60,54 @@ vec4 computeTextureColor() {
 
 }
 
+vec3 blinnPhong( // 光照模型
+    PointLight light,
+    Material material,
+    vec3 surfacePosition,
+    vec3 surfaceNormal,
+    vec3 viewPosition
+) {
+
+    vec3 viewDirection = normalize(viewPosition - surfacePosition);
+    vec3 lightDirection = normalize(light.position - surfacePosition);
+    vec3 normalDirection = normalize(surfaceNormal);
+
+    // Ambient
+    vec3 ambient = light.ambientColor * material.textureColor;
+
+    // Diffuse
+    vec3 diffuse = light.diffuseColor * material.textureColor * max(0., dot(lightDirection, normalDirection));
+
+    vec3 lightmapValue = texture( lightMapData, outUV ).rgb; // lightMap
+    ambient *= lightmapValue;
+    diffuse *= lightmapValue;
+
+    // Specular  公式: (n·(v+l)/|v+l|)^g
+    float specular = pow(max(0., dot(normalize(viewDirection + lightDirection), normalDirection)), material.gloss);
+
+    return (
+        material.kAmbient * ambient +
+        material.kDiffuse * diffuse +
+        material.kSpecular * specular
+    );
+
+}
+
 void main() {
 
-    vec3 lightPosition = vec3(0., 40.97, 0.);
+    PointLight light = PointLight(
+        vec3(0., 40.97, 0.), // 点光源位置
+        vec3(1., 1., 1.), // 漫反射颜色
+        vec3(1., 1., 1.) // 高光颜色
+    );
 
-    vec3 textureColor = computeTextureColor().xyz;
-    vec3 lightDirection = normalize(lightPosition - outPosition);
+    Material material = Material(
+        computeTextureColor().rgb,
+        0.7, 0.4, 0.25, // 三种光照比例 环境光:漫反射:高光
+        16. // 粗糙度  其值越大, 高光区域越小
+    );
+    
 
-    vec3 diffuse = textureColor * max(0., dot(lightDirection, normalize(outNormal)));
-
-    outColor = vec4(diffuse * 0.4 + textureColor * 0.7, 1.);
+    fragColor = vec4(blinnPhong(light, material, outPosition, outNormal, cameraPosition), 1.);
 
 }

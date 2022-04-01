@@ -5,9 +5,10 @@ class InstancedGroup {
         originMesh,
         animationUrl,
         textureUrl,
+        lightMapUrl,
         textureCount,
         camera,
-        clock
+        clock,
     ) {
 
         // this.mesh;
@@ -16,6 +17,7 @@ class InstancedGroup {
         this.animationUrl = animationUrl;
         this.textureUrl = textureUrl;
         this.textureCount = textureCount;
+        this.lightMapUrl = lightMapUrl;
         this.camera = camera;
         this.uniforms;
 
@@ -107,6 +109,10 @@ class InstancedGroup {
             this.uniforms.animationTexture = { value: new THREE.DataTexture(new Float32Array([0,0,0]), 1, 1, THREE.RGBFormat, THREE.FloatType) };
             this.uniforms.animationTextureLength = { value: 0 };
             this.initAnimation(this.uniforms); // 异步加载动画数据
+        }
+        if (this.lightMapUrl) {
+            const lightMapData = await this.loadTexture(this.lightMapUrl);
+            this.uniforms.lightMapData = { value: lightMapData };
         }
         material.uniforms = this.uniforms;
 
