@@ -61,7 +61,7 @@ class Main {
 
         function manage() {
 
-            // scope.preview();
+            scope.preview();
 
         }
 
@@ -91,7 +91,7 @@ class Main {
         ];
 
         let funcArr = new Array( movePath.length );
-        funcArr[3] = function() { scope.avatarManager.playAudio(); }
+        funcArr[1] = function() { scope.avatarManager.playAudio(); }
         // funcArr[ movePath.length - 1 ] = function() {
         //     if ( scope.avatarManager.manager.host.audio.isPlaying ) {
         //         scope.avatarManager.manager.host.cb = scope.roomManager.playVideo;
@@ -167,7 +167,8 @@ class Main {
 
         let scope = this, update = true;
         let frameIndex = 0, frameIndexPre = 0;
-        const tag = document.getElementById("fps");
+        const fpsTag = document.getElementById("fps");
+        const countTag = document.getElementById("count");
 
         render();
         
@@ -180,7 +181,18 @@ class Main {
                 update = false;
             }
             frameIndex++;
-            if( scope.avatarManager && update ) scope.avatarManager.updateLOD();
+            if( scope.avatarManager && update ) {
+                let lodCount = scope.avatarManager.updateLOD();
+                if ( lodCount ) {
+                    countTag.innerHTML = `
+                        High: ${lodCount[0]}<br>
+                        Medium: ${lodCount[1]}<br>
+                        Low: ${lodCount[2]}<br>
+                        Total: ${lodCount[0] + lodCount[1] + lodCount[2]}
+                    `;
+                }
+            }
+            else countTag.innerHTML = "";
             if( scope.VR ) scope.stereoEffect.render(scope.scene, scope.camera);
             else scope.renderer.render(scope.scene, scope.camera);
             if ( window.innerWidth != scope.winWidth || window.innerHeight != scope.winHeight ) onResize();
@@ -188,7 +200,7 @@ class Main {
         }
 
         function computeFPS() {
-            tag.innerHTML = (frameIndex - frameIndexPre);
+            fpsTag.innerHTML = `FPS: ${frameIndex - frameIndexPre}`;
             frameIndexPre = frameIndex;
         }
 
@@ -201,6 +213,13 @@ class Main {
 
             scope.renderer.setSize( scope.winWidth, scope.winHeight );
         }
+
+    }
+
+    getStatics() {
+
+        let info = StatisticsUtils.statistic(this.scene);
+        console.log(info)
 
     }
 
@@ -217,6 +236,46 @@ class Main {
         this.showFPS = false;
         clearInterval(this.fpsInterval);
 
+    }
+}
+
+/**
+ * Util class to statistic components and index of a scene
+ */
+class StatisticsUtils {
+    /**
+     * Statistics components and index of a scene
+     */
+    static statistic(scene) {
+        const info = { components: 0, index: 0 }
+        scene.traverse((object) => {
+            StatisticsUtils.getObjectInfo(object, info)
+        })
+        return info
+    }
+
+    /**
+     * Gets components and index number of a object (not including its children)
+     */
+    static getObjectInfo (object, info) {
+        // only count in Mesh and Line
+        if (object instanceof THREE.Mesh || object instanceof THREE.Line) {
+            info.components++
+            if (object.geometry instanceof THREE.BufferGeometry) {
+                const geom = object.geometry
+                if (geom.index && geom.index.count) {
+                    info.index += geom.index.count
+                } else if (geom.attributes.position) {
+                    const pos = geom.attributes.position
+                    if (pos.count && pos.itemSize) {
+                        info.index += Math.round(pos.count / pos.itemSize)
+                    }
+                }
+            }
+            if (object.geometry instanceof THREE.InstancedBufferGeometry) {
+                console.log(object)
+            }
+        }
     }
 }
 

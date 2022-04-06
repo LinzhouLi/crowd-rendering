@@ -80,7 +80,7 @@ class AvatarManager {
 
         this.psnr = await this.loadJSON("assets/PSNR.json"); // 峰值信噪比
         this.initFilePath();
-        this.initAvatarParamsGreedly();
+        this.initAvatarParams();
         this.adjustParam();
         this.computeDisp();
 
@@ -414,6 +414,12 @@ class AvatarManager {
             group.mesh.count = lodCount.female[i];
             group.update();
         } );
+
+        return [
+            lodCount.male[0] + lodCount.female[0],
+            lodCount.male[1] + lodCount.female[1],
+            lodCount.male[2] + lodCount.female[2]
+        ];
 
     }
 
