@@ -193,7 +193,8 @@ class AvatarManager {
             }
             else if (param.sex == "female") {
                 if (param.textureType[0] == 14) param.textureType[0]--; // 去掉短袖短裤
-                if (param.textureType[2] == 3 || param.textureType[2] == 4 || param.textureType[2] == 7 || param.textureType[2] == 8) param.textureType[2]--;
+                if (param.textureType[2] == 3 || param.textureType[2] == 7) param.textureType[2]--;
+                if (param.textureType[2] == 4 || param.textureType[2] == 8) param.textureType[2]++;
             }
         }
 
