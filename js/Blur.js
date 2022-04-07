@@ -60,7 +60,7 @@ class Blur {
         }
         button2.onmousedown = function() {
             document.getElementById("cheat2").style.display = 'none';
-            window.location.href = "showRoom/index.html";
+            window.location.href = "coffeeBreak/index.html";
         }
 
         document.getElementById("cheat").appendChild( button1 );
