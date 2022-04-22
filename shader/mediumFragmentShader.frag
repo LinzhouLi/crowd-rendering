@@ -78,9 +78,9 @@ vec3 blinnPhong( // 光照模型
     // Diffuse
     vec3 diffuse = light.diffuseColor * material.textureColor * max(0., dot(lightDirection, normalDirection));
 
-    vec3 lightmapValue = texture( lightMapData, outUV ).rgb; // lightMap
-    ambient *= lightmapValue;
-    diffuse *= lightmapValue;
+    // vec3 lightmapValue = texture( lightMapData, outUV ).rgb; // lightMap
+    // ambient *= lightmapValue;
+    // diffuse *= lightmapValue;
 
     // Specular  公式: (n·(v+l)/|v+l|)^g
     float specular = pow(max(0., dot(normalize(viewDirection + lightDirection), normalDirection)), material.gloss);
