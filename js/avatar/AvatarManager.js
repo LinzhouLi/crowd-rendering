@@ -106,6 +106,7 @@ class AvatarManager {
 
             male: {
                 lightMapPath: "assets/lightmap/Lightmap_Male.jpg",
+                morphTargetPath: "assets/animation/male_morph_target.json",
 
                 highModelPath: "assets/model/avatar/male_high_new.glb",
                 highAnimationPath: "assets/animation/male_high_animations_new.json",
@@ -121,6 +122,7 @@ class AvatarManager {
 
             female: {
                 lightMapPath: "assets/lightmap/Lightmap_Female.jpg",
+                morphTargetPath: "assets/animation/female_morph_target.json",
 
                 highModelPath: "assets/model/avatar/female_high_new.glb",
                 highAnimationPath: "assets/animation/female_high_animations_new.json",
@@ -151,6 +153,7 @@ class AvatarManager {
                 animationType: 0,
                 animationStartTime: 0,
                 animationEndTime: 0,
+                morphTargetWeight: Math.random(),
                 bodyScale: [
                     1,
                     0.9 + 0.2 * Math.random(),
@@ -431,10 +434,11 @@ class AvatarManager {
         // 人物旋转参数设置
         let rotation = [Math.PI / 2, Math.PI / 2, 3 * Math.PI / 2];
         if ( param.LOD == 2 ) rotation = [Math.PI / 2, 0, 3 * Math.PI / 2];
-
+        
         const instanceGroup = this.manager.instanceGroup[param.sex][param.LOD];
         instanceGroup.setAnimation( param.index, param.animationType, param.animationStartTime );
         instanceGroup.setSpeed( param.index, param.animationSpeed );
+        instanceGroup.setMorphTargetWeight( param.index, param.morphTargetWeight );
         instanceGroup.setTexture( param.index, param.textureType );
         instanceGroup.setRotation( param.index, rotation ) // 使Avatar面向前方
         instanceGroup.setPosition( param.index, param.position );
@@ -538,6 +542,7 @@ class AvatarManager {
             this.manager.config.male.maxCount[2],
             maleMesh,
             false,
+            false,
             this.filePath.male.lowTexturePath,
             false,
             this.manager.config.male.textureCount,
@@ -558,6 +563,7 @@ class AvatarManager {
         const femaleInstanceGroup = new InstancedGroup(
             this.manager.config.female.maxCount[2],
             femaleMesh,
+            false,
             false,
             this.filePath.female.lowTexturePath,
             false,
@@ -586,6 +592,7 @@ class AvatarManager {
             this.manager.config.male.maxCount[1],
             maleMesh,
             this.filePath.male.mediumAnimationPath,
+            null,
             this.filePath.male.mediumTexturePath,
             this.filePath.male.lightMapPath,
             this.manager.config.male.textureCount,
@@ -608,6 +615,7 @@ class AvatarManager {
             this.manager.config.female.maxCount[1],
             femaleMesh,
             this.filePath.female.mediumAnimationPath,
+            null,
             this.filePath.female.mediumTexturePath,
             this.filePath.female.lightMapPath,
             this.manager.config.female.textureCount,
@@ -636,6 +644,7 @@ class AvatarManager {
             this.manager.config.male.maxCount[0],
             maleMesh,
             this.filePath.male.highAnimationPath,
+            this.filePath.male.morphTargetPath,
             this.filePath.male.highTexturePath,
             this.filePath.male.lightMapPath,
             this.manager.config.male.textureCount,
@@ -658,6 +667,7 @@ class AvatarManager {
             this.manager.config.female.maxCount[0],
             femaleMesh,
             this.filePath.female.highAnimationPath,
+            this.filePath.female.morphTargetPath,
             this.filePath.female.highTexturePath,
             this.filePath.female.lightMapPath,
             this.manager.config.female.textureCount,

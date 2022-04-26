@@ -7,11 +7,12 @@ uniform mat4 modelViewMatrix, projectionMatrix;
 uniform float time;
 
 in vec3 position;
+in vec3 morphTarget;
 in vec2 inUV;
 in vec3 normal;
 in vec4 skinIndex, skinWeight; // 仅使用了绑定的第一个骨骼
 in vec3 mcol0, mcol1, mcol2, mcol3;
-in float speed, animationStartTime;
+in float speed, morphTargetWeight, animationStartTime;
 in float animationIndex; // 动画类型
 in vec4 textureIndex;
 in vec4 bodyScale; // 0:身体 1:头部 2:上肢 3:下肢
@@ -114,7 +115,8 @@ void main() {
     );
     
     // float scale = computeBodyScale(); // 身体形变,暂不使用
-    vec4 worldPosition = transformMatrix * vec4(frameInterpolation(position), 1.); // 世界坐标下的顶点位置
+    vec3 pos = (1.0 - morphTargetWeight) * position + morphTargetWeight * morphTarget;
+    vec4 worldPosition = transformMatrix * vec4(frameInterpolation(pos), 1.); // 世界坐标下的顶点位置
     vec4 normal = transformMatrix * vec4(frameInterpolation(normal), 0.); // 世界坐标下的顶点向量
     outNormal = normal.xyz;
     outPosition = worldPosition.xyz;

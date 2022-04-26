@@ -4,6 +4,7 @@ class InstancedGroup {
         instanceCount,
         originMesh,
         animationUrl,
+        morphTargetUrl,
         textureUrl,
         lightMapUrl,
         textureCount,
@@ -15,6 +16,7 @@ class InstancedGroup {
         this.instanceCount = instanceCount;
         this.originMesh = originMesh;
         this.animationUrl = animationUrl;
+        this.morphTargetUrl = morphTargetUrl;
         this.textureUrl = textureUrl;
         this.textureCount = textureCount;
         this.lightMapUrl = lightMapUrl;
@@ -22,7 +24,8 @@ class InstancedGroup {
         this.uniforms;
 
         this.clock = clock;
-        this.ifAnimated = animationUrl;
+        this.ifAnimated = !!animationUrl;
+        this.ifMorphTarget = !!morphTargetUrl;
         this.dummy = new THREE.Object3D();
 
         // matrix
@@ -32,6 +35,7 @@ class InstancedGroup {
         this.mcol3;
 
         this.speed; // 动画速度
+        this.morphTargetWeight; // morph target 权重
         this.animationStartTime;
         this.animationType; // 动画类型
         this.textureType; // 身体贴图类型 vec4
@@ -61,6 +65,7 @@ class InstancedGroup {
         this.mcol3 = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
         this.textureType = new THREE.InstancedBufferAttribute(new Uint8Array(this.instanceCount * 4), 4);
         if (this.ifAnimated) {
+            if (this.ifMorphTarget) this.morphTargetWeight = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
             this.speed = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
             this.animationType = new THREE.InstancedBufferAttribute(new Uint8Array(this.instanceCount), 1);
             this.animationStartTime = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
@@ -72,7 +77,7 @@ class InstancedGroup {
         }
 
         const material = await this.initMaterial();
-        const geometry = this.initGeometry();
+        const geometry = await this.initGeometry();
         const mesh = new THREE.InstancedMesh(geometry, material, this.instanceCount);
         mesh.castShadow = true; // 阴影
         mesh.receiveShadow = true;
@@ -149,7 +154,7 @@ class InstancedGroup {
 
     }
 
-    initGeometry() {
+    async initGeometry() {
 
         let geometry = new THREE.InstancedBufferGeometry();
         geometry.instanceCount = this.instanceCount;
@@ -157,6 +162,11 @@ class InstancedGroup {
         geometry.setAttribute('inUV', this.originMesh.geometry.attributes.uv);
         geometry.setAttribute('normal', this.originMesh.geometry.attributes.normal);
         if (this.ifAnimated) {
+            if (this.ifMorphTarget) {
+                const morphTargetData = await this.loadJSON(this.morphTargetUrl);
+                geometry.setAttribute('morphTarget', new THREE.BufferAttribute(new Float32Array(morphTargetData), 3, false));
+                geometry.setAttribute('morphTargetWeight', this.morphTargetWeight);
+            }
             geometry.setAttribute('skinIndex', this.originMesh.geometry.attributes.skinIndex);
             geometry.setAttribute('skinWeight', this.originMesh.geometry.attributes.skinWeight);
             geometry.setAttribute('speed', this.speed);
@@ -376,6 +386,14 @@ class InstancedGroup {
 
         if (this.ifAnimated) {
             this.speed.array[avatarIndex] = speed;
+        }
+
+    }
+
+    setMorphTargetWeight(avatarIndex, weight) { // 设置动画速度
+
+        if (this.ifAnimated && this.ifMorphTarget) {
+            this.morphTargetWeight.array[avatarIndex] = weight;
         }
 
     }

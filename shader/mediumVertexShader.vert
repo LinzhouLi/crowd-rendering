@@ -63,9 +63,9 @@ void main() {
     );
 
     outNormal = (transformMatrix * animationMatrix * vec4(normal, 0.)).xyz;
-    vec4 position = transformMatrix * animationMatrix * vec4(position, 1.);
-    outPosition = position.xyz;
+    vec4 transPos = transformMatrix * animationMatrix * vec4(position, 1.);
+    outPosition = transPos.xyz;
 
-    gl_Position = projectionMatrix * modelViewMatrix * position;
+    gl_Position = projectionMatrix * modelViewMatrix * transPos;
 
 }
