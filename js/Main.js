@@ -61,7 +61,7 @@ class Main {
 
         function manage() {
 
-            scope.preview();
+            // scope.preview();
 
         }
 
