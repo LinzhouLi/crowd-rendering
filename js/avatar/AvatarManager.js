@@ -153,7 +153,7 @@ class AvatarManager {
                 animationType: 0,
                 animationStartTime: 0,
                 animationEndTime: 0,
-                morphTargetWeight: Math.random(),
+                morphTargetWeight: 0.2 * Math.random() + 0.8,
                 bodyScale: [
                     1,
                     0.9 + 0.2 * Math.random(),

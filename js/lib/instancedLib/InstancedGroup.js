@@ -406,6 +406,7 @@ class InstancedGroup {
         this.mcol3.needsUpdate = true;
         this.textureType.needsUpdate = true;
         if (this.ifAnimated) {
+            if (this,this.ifMorphTarget) this.morphTargetWeight.needsUpdate = true;
             this.animationType.needsUpdate = true;
             this.animationStartTime.needsUpdate = true;
             this.speed.needsUpdate = true;
